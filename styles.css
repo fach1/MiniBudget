@@ -1,0 +1,142 @@
+/* General styles */
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f8f9fa;
+    color: #212529;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+header {
+    color: white;
+    text-align: center;
+    background-color: #28a745;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+h1, h2 {
+    font-weight: 600;
+}
+
+/* Add styles for main or remove the ruleset */
+main {
+    padding: 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+button {
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    transform: scale(1.05);
+}
+
+/* Dark theme */
+body.dark-mode {
+    background-color: #212529;
+    color: #f8f9fa;
+}
+
+body.dark-mode header {
+    background-color: #1c1c1c;
+}
+
+body.dark-mode .card {
+    background-color: #343a40;
+    color: #f8f9fa;
+}
+
+body.dark-mode .btn {
+    background-color: #495057;
+    color: #f8f9fa;
+}
+
+body.dark-mode .btn:hover {
+    background-color: #6c757d;
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+/* Chart styles */
+#budget-overview canvas {
+    border-radius: 10px;
+}
+
+/* Center the chart horizontally between sections */
+#budget-overview .position-relative {
+    margin: 20px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#remaining-budget {
+    font-weight: bold;
+}
+
+/* Modern item list styles */
+#budget-list .card {
+    border-radius: 3px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+#budget-list .list-group-item {
+    border: none;
+    padding: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+#budget-list .list-group-item:hover {
+    background-color: #f1f3f5;
+}
+
+#budget-list .badge {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+#budget-list .delete-btn {
+    transition: all 0.3s ease;
+}
+
+#budget-list .delete-btn:hover {
+    transform: scale(1.1);
+    background-color: #dc3545;
+    color: #fff;
+}
+
+#empty-list {
+    color: #6c757d;
+}
+
+/* Control position of total budget */
+#total-budget-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    transform: translate(-50%, -50%);
+}
+
+#total-budget {
+    font-size: 1.5rem;
+    color: #212529;
+}
+
+#budget-chart {
+    display: block;
+    margin: 0 auto;
+}

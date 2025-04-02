@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Metadata and external stylesheets -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Budget</title>
+    <!-- Material Design for Bootstrap -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.3.0/mdb.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header section -->
+    <header class="bg-success text-white text-center py-3">
+        <h1 class="mb-0">MINI BUDGET</h1>
+    </header>
+    <main class="container my-4">
+        <!-- Budget overview section -->
+        <section id="budget-overview" class="mb-4 text-center">
+            <h2 class="mb-3">Budget Overview</h2>
+            <!-- Center the chart horizontally -->
+            <div class="d-flex flex-column align-items-center">
+                <div class="position-relative" style="width: 300px; height: 150px;">
+                    <canvas id="budget-chart" width="300" height="150" aria-label="Budget visualization chart showing expenses and remaining budget"></canvas>
+                    <!-- Display total budget in the center of the chart -->
+                    <div id="total-budget-container" class="position-absolute top-50 start-50 translate-middle text-center">
+                        <span id="total-budget" class="fw-bold fs-4">$0</span>
+                    </div>
+                </div>
+            </div>
+            <!-- Input for setting the total budget -->
+            <div class="mt-3">
+                <div class="form-outline w-50 mx-auto">
+                    <input type="number" id="total-budget-input" class="form-control" step="0.01" placeholder=" " />
+                    <label class="form-label" for="total-budget-input">Total Budget</label>
+                </div>
+            </div>
+            <!-- Display remaining budget -->
+            <div class="mt-3">
+                <h4>Remaining Budget: <span id="remaining-budget" class="text-primary">$0</span></h4>
+            </div>
+        </section>
+        <!-- Form to add budget items -->
+        <section id="budget-form" class="mb-4">
+            <h2 class="mb-3">Add Item</h2>
+            <form class="row g-3">
+                <div class="col-md-6">
+                    <div class="form-outline">
+                        <input type="text" id="item-name" name="item-name" class="form-control" placeholder=" " required />
+                        <label class="form-label" for="item-name">Item Name</label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-outline">
+                        <input type="number" id="amount" name="amount" class="form-control" step="0.01" placeholder=" " required />
+                        <label class="form-label" for="amount">Price</label>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-success w-100 ripple-surface"><i class="fas fa-plus-circle"></i> Add Item</button>                </div>
+            </form>
+        </section>
+        <!-- List of budget items -->
+        <section id="budget-list">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="mb-0">Items List</h2>
+                <button id="clear-items" class="btn btn-outline-danger btn-sm" data-mdb-toggle="modal" data-mdb-target="#confirmClearModal">
+                    <i class="fas fa-trash"></i> Clear List
+                </button>
+            </div>
+            <div class="card shadow-2-strong">
+                <ul class="list-group list-group-flush">
+                    <!-- Budget items will be dynamically added here -->
+                </ul>
+                <div id="empty-list" class="card-body text-center py-4">
+                    <p class="text-muted mb-0"><i class="fas fa-info-circle"></i> No items added yet</p>
+                </div>
+            </div>
+        </section>
+    </main>
+    <!-- Modal for confirming clear all -->
+    <div class="modal fade" id="confirmClearModal" tabindex="-1" aria-labelledby="confirmClearModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="confirmClearModalLabel">Confirm Clear All</h5>
+                    <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to delete all items? This action cannot be undone.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-mdb-dismiss="modal">Cancel</button>
+                    <button type="button" id="confirm-clear-btn" class="btn btn-danger">Clear All</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- External scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.3.0/mdb.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
