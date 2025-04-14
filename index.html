@@ -17,10 +17,12 @@
     <header class="bg-success text-white text-center py-3">
         <div class="container position-relative">
             <h1 class="mb-0">MINI BUDGET</h1>
+
             <button id="menu-button" class="btn btn-success position-absolute end-0 top-50 translate-middle-y" 
                     aria-label="Open menu" title="Open saved budgets menu">
                 <i class="fas fa-bars fa-lg" aria-hidden="true"></i>
             </button>
+        
         </div>
     </header>
 
@@ -32,7 +34,7 @@
                 <button id="new-budget-btn" class="btn btn-sm btn-outline-light me-2" aria-label="Create new budget">
                     <i class="fas fa-plus" aria-hidden="true"></i>
                 </button>
-                <button id="close-sidebar" class="btn text-white" aria-label="Close menu">
+                <button id="close-sidebar" class="btn btn-sm btn-outline-light me-2" aria-label="Close menu">
                     <i class="fas fa-times" aria-hidden="true"></i>
                 </button>
             </div>
@@ -80,7 +82,7 @@
 
         <!-- Add Item Form Section -->
         <section id="budget-form" class="mb-4">
-            <h2 class="mb-3">Add Item</h2>
+            <h4 class="mt-3">Add Item</h4>
             <form class="row g-3" aria-label="Add budget item form">
                 <div class="col-md-6">
                     <div class="form-outline">
@@ -107,7 +109,7 @@
         <!-- Budget Items List Section -->
         <section id="budget-list">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h2 class="mb-0">Items List</h2>
+                <h4 class="mb-3">Items List</h4>
                 <div class="d-flex gap-2">
                     <button id="save-budget" class="btn btn-outline-success btn-sm action-btn" 
                             data-mdb-toggle="modal" data-mdb-target="#saveBudgetModal">
@@ -115,7 +117,7 @@
                     </button>
                     <button id="clear-items" class="btn btn-outline-danger btn-sm action-btn" 
                             data-mdb-toggle="modal" data-mdb-target="#confirmClearModal">
-                        <i class="fas fa-trash" aria-hidden="true"></i> Clear List
+                        <i class="fas fa-trash" aria-hidden="true"></i> Clear
                     </button>
                 </div>
             </div>

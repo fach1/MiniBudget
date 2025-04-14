@@ -178,7 +178,8 @@ button:hover {
 #menu-button {
   z-index: 1000;
   border: none;
-  padding: 8px 12px;
+  padding: 10px 10px;
+  margin-right: 10px;
   box-shadow: var(--shadow-sm);
   border-radius: var(--border-radius-md);
   background-color: var(--color-primary-light);
