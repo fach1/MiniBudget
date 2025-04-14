@@ -97,6 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: true,
                     cutout: '70%',
                     plugins: {
                         legend: {
@@ -112,6 +113,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             });
+
+            // Add window resize event listener to redraw chart
+            window.addEventListener('resize', this.handleResize);
+        },
+
+        handleResize() {
+            // Force chart update on window resize
+            if (doughnutChart) {
+                doughnutChart.resize();
+                doughnutChart.update();
+            }
         },
 
         update() {
@@ -796,6 +808,11 @@ document.addEventListener('DOMContentLoaded', () => {
         uiManager.updateEmptyListVisibility();
         uiManager.updateSaveButtonState(); // Initialize the save button state
         setupEventListeners();
+
+        // Initialize Material Design Bootstrap components
+        document.querySelectorAll('.form-outline').forEach((formOutline) => {
+            new mdb.Input(formOutline).init();
+        });
     }
 
     // Start the app

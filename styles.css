@@ -89,6 +89,10 @@ button:hover {
 /* =============== CHART SECTION =============== */
 #budget-overview canvas {
   border-radius: var(--border-radius-lg);
+  width: 100% !important;
+  height: auto !important;
+  max-width: 300px;
+  margin: 0 auto;
 }
 
 #budget-overview .position-relative {
@@ -96,6 +100,11 @@ button:hover {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
+  max-width: 150px;
+  height: auto;
+  min-height: 150px;
+  position: relative;
 }
 
 #remaining-budget {
