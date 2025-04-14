@@ -39,7 +39,8 @@ document.addEventListener('DOMContentLoaded', () => {
             saveBudgetBtn: '#save-budget',
             confirmSaveBtn: '#confirm-save-btn',
             budgetNameInput: '#budget-name-input',
-            savedBudgetsList: '.sidebar-content ul'
+            savedBudgetsList: '.sidebar-content ul',
+            newBudgetBtn: '#new-budget-btn'
         };
 
         const elements = {};
@@ -71,7 +72,9 @@ document.addEventListener('DOMContentLoaded', () => {
         totalBudget: 0,
         currentSpending: 0,
         items: [],
-        currentBudgetName: 'Default Budget'
+        currentBudgetName: 'Default Budget',
+        currentBudgetId: null, // Add this to track currently loaded budget ID
+        isEditMode: false      // Add this to track if we're editing an existing budget
     };
 
     // Initialize saved budgets array
@@ -143,18 +146,37 @@ document.addEventListener('DOMContentLoaded', () => {
                 elements.budgetList.children.length === 0 ? 'block' : 'none';
         },
 
-        showSaveSuccess() {
+        updateSaveButtonState() {
+            const saveBtn = elements.saveBudgetBtn;
+            
+            if (budgetState.isEditMode && budgetState.currentBudgetId) {
+                saveBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Update';
+                saveBtn.setAttribute('data-original-title', 'Update current budget');
+                saveBtn.classList.add('btn-outline-primary');
+                saveBtn.classList.remove('btn-outline-success');
+            } else {
+                saveBtn.innerHTML = '<i class="fas fa-save"></i> Save';
+                saveBtn.setAttribute('data-original-title', 'Save as new budget');
+                saveBtn.classList.add('btn-outline-success');
+                saveBtn.classList.remove('btn-outline-primary');
+            }
+        },
+
+        showSaveSuccess(isUpdate = false) {
             const saveBtn = elements.saveBudgetBtn;
             const originalText = saveBtn.innerHTML;
+            const messageText = isUpdate ? '<i class="fas fa-check"></i> Updated!' : '<i class="fas fa-check"></i> Saved!';
+            const originalClass = isUpdate ? 'btn-outline-primary' : 'btn-outline-success';
+            const successClass = 'btn-success';
             
-            saveBtn.innerHTML = '<i class="fas fa-check"></i> Saved!';
-            saveBtn.classList.add(UI_CLASSES.SUCCESS);
-            saveBtn.classList.remove(UI_CLASSES.OUTLINE_SUCCESS);
+            saveBtn.innerHTML = messageText;
+            saveBtn.classList.add(successClass);
+            saveBtn.classList.remove(originalClass);
             
             setTimeout(() => {
                 saveBtn.innerHTML = originalText;
-                saveBtn.classList.remove(UI_CLASSES.SUCCESS);
-                saveBtn.classList.add(UI_CLASSES.OUTLINE_SUCCESS);
+                saveBtn.classList.remove(successClass);
+                saveBtn.classList.add(originalClass);
             }, ANIMATION_TIMES.SUCCESS_MESSAGE);
         }
     };
@@ -307,6 +329,8 @@ document.addEventListener('DOMContentLoaded', () => {
             budgetState.totalBudget = budget.totalBudget;
             budgetState.currentSpending = budget.currentSpending;
             budgetState.currentBudgetName = budget.name;
+            budgetState.currentBudgetId = budget.id;
+            budgetState.isEditMode = true;
             
             // Update input value
             elements.totalBudgetInput.value = budgetState.totalBudget;
@@ -320,6 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Update UI
             uiManager.updateAll();
+            uiManager.updateSaveButtonState();
             dataManager.saveToLocalStorage();
         },
         
@@ -332,21 +357,43 @@ document.addEventListener('DOMContentLoaded', () => {
         saveBudget(budgetName) {
             if (!budgetName) return false;
             
-            // Create a unique ID
-            const budgetId = Date.now().toString();
+            // Update existing budget if in edit mode
+            if (budgetState.isEditMode && budgetState.currentBudgetId) {
+                return this.updateBudget(budgetName);
+            }
             
-            // Create budget object
-            const budget = {
-                id: budgetId,
-                name: budgetName,
-                totalBudget: budgetState.totalBudget,
-                currentSpending: budgetState.currentSpending,
-                items: Array.from(elements.budgetList.children).map(item => item.outerHTML),
-                createdAt: new Date().toISOString()
-            };
+            // Create a new budget
+            const budgetId = Date.now().toString();
+            const budget = this.createBudgetObject(budgetId, budgetName);
             
             // Add to saved budgets
             savedBudgets.push(budget);
+            
+            // Update current budget info
+            budgetState.currentBudgetName = budgetName;
+            budgetState.currentBudgetId = budgetId;
+            budgetState.isEditMode = true;
+            
+            // Update UI
+            this.updateSavedBudgetsList();
+            uiManager.updateSaveButtonState();
+            dataManager.saveToLocalStorage();
+            
+            return true;
+        },
+        
+        updateBudget(budgetName) {
+            const index = savedBudgets.findIndex(b => b.id === budgetState.currentBudgetId);
+            if (index === -1) return false;
+            
+            // Create updated budget object
+            const updatedBudget = this.createBudgetObject(
+                budgetState.currentBudgetId, 
+                budgetName
+            );
+            
+            // Update in the array
+            savedBudgets[index] = updatedBudget;
             
             // Update current budget name
             budgetState.currentBudgetName = budgetName;
@@ -356,6 +403,28 @@ document.addEventListener('DOMContentLoaded', () => {
             dataManager.saveToLocalStorage();
             
             return true;
+        },
+        
+        createBudgetObject(id, name) {
+            return {
+                id: id,
+                name: name,
+                totalBudget: budgetState.totalBudget,
+                currentSpending: budgetState.currentSpending,
+                items: Array.from(elements.budgetList.children).map(item => item.outerHTML),
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+        },
+        
+        createNewBudget() {
+            // Reset current budget ID and edit mode
+            budgetState.currentBudgetId = null;
+            budgetState.isEditMode = false;
+            budgetState.currentBudgetName = 'New Budget';
+            
+            // Update UI
+            uiManager.updateSaveButtonState();
         }
     };
 
@@ -609,6 +678,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Save to localStorage
             dataManager.saveToLocalStorage();
+
+            // If we cleared all items from an existing budget, create a new budget
+            if (budgetState.isEditMode && budgetState.currentBudgetId) {
+                savedBudgetsManager.createNewBudget();
+            }
         }
     };
 
@@ -634,7 +708,13 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         handleSaveBudget() {
-            // Just show the modal - actual saving is done in handleConfirmSaveBudget
+            // If editing an existing budget, pre-fill the name
+            if (budgetState.isEditMode && budgetState.currentBudgetId) {
+                elements.budgetNameInput.value = budgetState.currentBudgetName;
+            } else {
+                elements.budgetNameInput.value = '';
+            }
+            
             // The modal is already configured to show via data-mdb-toggle attribute
         },
         
@@ -645,6 +725,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             
+            const isUpdate = budgetState.isEditMode && budgetState.currentBudgetId;
             const success = savedBudgetsManager.saveBudget(budgetName);
             
             if (success) {
@@ -656,7 +737,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 elements.budgetNameInput.value = '';
                 
                 // Show success message
-                uiManager.showSaveSuccess();
+                uiManager.showSaveSuccess(isUpdate);
             }
         }
     };
@@ -683,6 +764,27 @@ document.addEventListener('DOMContentLoaded', () => {
             confirmClearBtn.addEventListener('click', itemsManager.handleClearAllItems);
         }
 
+        // New budget button
+        if (elements.newBudgetBtn) {
+            elements.newBudgetBtn.addEventListener('click', () => {
+                // Clear the current budget
+                elements.budgetList.innerHTML = '';
+                elements.totalBudgetInput.value = '';
+                budgetState.totalBudget = 0;
+                budgetState.currentSpending = 0;
+                
+                // Reset edit mode
+                savedBudgetsManager.createNewBudget();
+                
+                // Update UI
+                uiManager.updateAll();
+                dataManager.saveToLocalStorage();
+                
+                // Close sidebar
+                sidebarManager.toggle();
+            });
+        }
+
         // Setup sidebar events
         sidebarManager.setup();
     }
@@ -692,6 +794,7 @@ document.addEventListener('DOMContentLoaded', () => {
         chartModule.initialize();
         dataManager.loadFromLocalStorage();
         uiManager.updateEmptyListVisibility();
+        uiManager.updateSaveButtonState(); // Initialize the save button state
         setupEventListeners();
     }
 
