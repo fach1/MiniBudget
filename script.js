@@ -167,13 +167,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const saveBtn = elements.saveBudgetBtn;
             
             if (budgetState.isEditMode && budgetState.currentBudgetId) {
-                saveBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Update';
+                saveBtn.innerHTML = '<i class="fas fa-sync-alt me-2"></i>Update';
                 saveBtn.setAttribute('data-original-title', 'Update current budget');
                 // Force green outline for update state
                 saveBtn.classList.add('btn-outline-success');
                 saveBtn.classList.remove('btn-outline-primary');
             } else {
-                saveBtn.innerHTML = '<i class="fas fa-save"></i> Save';
+                saveBtn.innerHTML = '<i class="fas fa-save me-2"></i>Save';
                 saveBtn.setAttribute('data-original-title', 'Save as new budget');
                 saveBtn.classList.add('btn-outline-success');
                 saveBtn.classList.remove('btn-outline-primary');
@@ -195,16 +195,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (budgetState.isEditMode && budgetState.currentBudgetId) {
                 // Switch to New Budget mode
-                clearBtn.innerHTML = '<i class="fas fa-file"></i> New Budget';
-                clearBtn.classList.remove('btn-outline-danger');
-                clearBtn.classList.add('btn-outline-secondary');
+                clearBtn.innerHTML = '<i class="fas fa-file me-2"></i>New Budget';
+                clearBtn.classList.remove('btn-outline-danger', 'btn-outline-secondary');
+                clearBtn.classList.add('btn-outline-primary');
                 clearBtn.setAttribute('data-mdb-toggle', 'modal');
                 clearBtn.setAttribute('data-mdb-target', '#confirmNewBudgetModal');
             } else {
                 // Revert to Clear mode
-                clearBtn.innerHTML = '<i class="fas fa-trash" aria-hidden="true"></i> Clear';
+                clearBtn.innerHTML = '<i class="fas fa-trash me-2" aria-hidden="true"></i>Clear';
                 clearBtn.classList.add('btn-outline-danger');
-                clearBtn.classList.remove('btn-outline-secondary');
+                clearBtn.classList.remove('btn-outline-secondary', 'btn-outline-primary');
                 clearBtn.setAttribute('data-mdb-toggle', 'modal');
                 clearBtn.setAttribute('data-mdb-target', '#confirmClearModal');
             }
@@ -213,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showSaveSuccess(isUpdate = false) {
             const saveBtn = elements.saveBudgetBtn;
             const originalText = saveBtn.innerHTML;
-            const messageText = isUpdate ? '<i class="fas fa-check"></i> Updated!' : '<i class="fas fa-check"></i> Saved!';
+            const messageText = isUpdate ? '<i class="fas fa-check me-2"></i>Updated!' : '<i class="fas fa-check me-2"></i>Saved!';
             const originalClass = 'btn-outline-success';
             const successClass = 'btn-success';
             
