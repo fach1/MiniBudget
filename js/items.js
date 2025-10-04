@@ -10,16 +10,16 @@ export function createItemsManager({ budgetState, uiManager, elements, getDataMa
       try {
         const amount = parseFloat(amountValue); if (isNaN(amount) || amount <= 0) return; const formattedAmount = amount.toFixed(2); const existingItem = this.findExistingItem(itemName);
         if (existingItem) { this.incrementExistingItem(existingItem); } else { this.addNewItem(itemName, amount, formattedAmount); }
-        uiManager.updateAll(); getDataManager().saveToLocalStorage(); elements.form.reset();
+  uiManager.updateAll(); if (savedBudgetsManager && savedBudgetsManager.syncActiveBudget) { savedBudgetsManager.syncActiveBudget(); } getDataManager().saveToLocalStorage(); elements.form.reset();
       } catch (error) { console.error('Error adding item:', error); }
     },
     findExistingItem(itemName) { const existingItems = Array.from(elements.budgetList.querySelectorAll('li')); return existingItems.find(item => { const itemNameElement = item.querySelector('strong'); return itemNameElement && itemNameElement.textContent === itemName; }); },
     incrementExistingItem(existingItem) {
-      const quantityElement = existingItem.querySelector('.item-quantity'); const currentQuantity = parseInt(quantityElement.textContent, 10); quantityElement.textContent = currentQuantity + 1;
-      const badgeElement = existingItem.querySelector('.badge'); const unitPrice = parseFloat(badgeElement.getAttribute('data-unit-price')); const newTotal = (unitPrice * (currentQuantity + 1)).toFixed(2); badgeElement.textContent = `$${newTotal}`; budgetState.currentSpending += unitPrice;
+  const quantityElement = existingItem.querySelector('.item-quantity'); const currentQuantity = parseInt(quantityElement.textContent, 10); quantityElement.textContent = currentQuantity + 1;
+  const badgeElement = existingItem.querySelector('.badge'); const unitPrice = parseFloat(badgeElement.getAttribute('data-unit-price')); const newTotal = (unitPrice * (currentQuantity + 1)).toFixed(2); badgeElement.textContent = `$${newTotal}`; budgetState.currentSpending += unitPrice; if (savedBudgetsManager && savedBudgetsManager.syncActiveBudget) { savedBudgetsManager.syncActiveBudget(); }
     },
     addNewItem(itemName, amount, formattedAmount) {
-      budgetState.currentSpending += amount;
+  budgetState.currentSpending += amount;
       const listItem = document.createElement('li'); listItem.className = 'list-group-item d-flex justify-content-between align-items-center';
       listItem.innerHTML = `
         <div>
@@ -33,20 +33,20 @@ export function createItemsManager({ budgetState, uiManager, elements, getDataMa
           <button class="btn btn-outline-primary btn-sm edit-btn ms-2">Edit</button>
           <button class="btn btn-danger btn-sm delete-btn ms-3">Delete</button>
         </div>`;
-      this.attachItemEventHandlers(listItem); elements.budgetList.appendChild(listItem);
+  this.attachItemEventHandlers(listItem); elements.budgetList.appendChild(listItem); if (savedBudgetsManager && savedBudgetsManager.syncActiveBudget) { savedBudgetsManager.syncActiveBudget(); }
     },
     handleIncrementItem(event) {
       const listItem = event.target.closest('li'); if (!listItem) return;
       try {
         const quantityElement = listItem.querySelector('.item-quantity'); const badgeElement = listItem.querySelector('.badge'); const unitPriceAttr = badgeElement.getAttribute('data-unit-price');
-        if (quantityElement && badgeElement && unitPriceAttr) { const unitPrice = parseFloat(unitPriceAttr); const currentQuantity = parseInt(quantityElement.textContent, 10); const newQuantity = currentQuantity + 1; quantityElement.textContent = newQuantity; const newTotal = (unitPrice * newQuantity).toFixed(2); badgeElement.textContent = `$${newTotal}`; budgetState.currentSpending += unitPrice; uiManager.updateAll(); getDataManager().saveToLocalStorage(); }
+  if (quantityElement && badgeElement && unitPriceAttr) { const unitPrice = parseFloat(unitPriceAttr); const currentQuantity = parseInt(quantityElement.textContent, 10); const newQuantity = currentQuantity + 1; quantityElement.textContent = newQuantity; const newTotal = (unitPrice * newQuantity).toFixed(2); badgeElement.textContent = `$${newTotal}`; budgetState.currentSpending += unitPrice; uiManager.updateAll(); if (savedBudgetsManager && savedBudgetsManager.syncActiveBudget) { savedBudgetsManager.syncActiveBudget(); } getDataManager().saveToLocalStorage(); }
       } catch (error) { console.error('Error incrementing item:', error); }
     },
     handleDecrementItem(event) {
       const listItem = event.target.closest('li'); if (!listItem) return;
       try {
         const quantityElement = listItem.querySelector('.item-quantity'); const badgeElement = listItem.querySelector('.badge'); const unitPriceAttr = badgeElement.getAttribute('data-unit-price');
-        if (quantityElement && badgeElement && unitPriceAttr) { const unitPrice = parseFloat(unitPriceAttr); const currentQuantity = parseInt(quantityElement.textContent, 10); if (currentQuantity <= 1) { this.handleDeleteItem({ target: listItem.querySelector('.delete-btn') }); return; } const newQuantity = currentQuantity - 1; quantityElement.textContent = newQuantity; const newTotal = (unitPrice * newQuantity).toFixed(2); badgeElement.textContent = `$${newTotal}`; budgetState.currentSpending -= unitPrice; uiManager.updateAll(); getDataManager().saveToLocalStorage(); }
+  if (quantityElement && badgeElement && unitPriceAttr) { const unitPrice = parseFloat(unitPriceAttr); const currentQuantity = parseInt(quantityElement.textContent, 10); if (currentQuantity <= 1) { this.handleDeleteItem({ target: listItem.querySelector('.delete-btn') }); return; } const newQuantity = currentQuantity - 1; quantityElement.textContent = newQuantity; const newTotal = (unitPrice * newQuantity).toFixed(2); badgeElement.textContent = `$${newTotal}`; budgetState.currentSpending -= unitPrice; uiManager.updateAll(); if (savedBudgetsManager && savedBudgetsManager.syncActiveBudget) { savedBudgetsManager.syncActiveBudget(); } getDataManager().saveToLocalStorage(); }
       } catch (error) { console.error('Error decrementing item:', error); }
     },
     handleDeleteItem(event) {
@@ -54,7 +54,7 @@ export function createItemsManager({ budgetState, uiManager, elements, getDataMa
       try {
         const badgeElement = listItem.querySelector('.badge'); if (!badgeElement) { console.error('Badge element not found.'); return; }
         const amountText = badgeElement.textContent; const amount = parseFloat(amountText.replace('$', '')); if (!isNaN(amount)) { budgetState.currentSpending -= amount; }
-        elements.budgetList.removeChild(listItem); uiManager.updateAll(); getDataManager().saveToLocalStorage();
+  elements.budgetList.removeChild(listItem); uiManager.updateAll(); if (savedBudgetsManager && savedBudgetsManager.syncActiveBudget) { savedBudgetsManager.syncActiveBudget(); } getDataManager().saveToLocalStorage();
       } catch (error) { console.error('Error deleting item:', error); }
     },
     openEditModal(event) {
@@ -73,7 +73,7 @@ export function createItemsManager({ budgetState, uiManager, elements, getDataMa
       if (!newName || isNaN(newUnitPrice) || newUnitPrice <= 0 || isNaN(newQuantity) || newQuantity <= 0) { alert('Datos inválidos.'); return; }
       const oldTotal = prevUnitPrice * prevQuantity; const newTotal = newUnitPrice * newQuantity; budgetState.currentSpending += (newTotal - oldTotal);
       nameElement.textContent = newName; quantityElement.textContent = newQuantity; badgeElement.setAttribute('data-unit-price', newUnitPrice.toFixed(2)); badgeElement.textContent = `$${newTotal.toFixed(2)}`;
-      uiManager.updateAll(); getDataManager().saveToLocalStorage(); if (itemsManager.editModalInstance) { itemsManager.editModalInstance.hide(); } itemsManager.itemBeingEdited = null;
+  uiManager.updateAll(); if (savedBudgetsManager && savedBudgetsManager.syncActiveBudget) { savedBudgetsManager.syncActiveBudget(); } getDataManager().saveToLocalStorage(); if (itemsManager.editModalInstance) { itemsManager.editModalInstance.hide(); } itemsManager.itemBeingEdited = null;
     },
     confirmDeleteItem() {
       if (!itemsManager.itemPendingDeletion) return; itemsManager.handleDeleteItem({ target: itemsManager.itemPendingDeletion.querySelector('.delete-btn') }); itemsManager.itemPendingDeletion = null; const modalEl = document.getElementById('confirmDeleteItemModal'); if (modalEl) { const instance = mdb.Modal.getInstance(modalEl); if (instance) instance.hide(); }

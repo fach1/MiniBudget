@@ -130,6 +130,10 @@ document.addEventListener('DOMContentLoaded', () => {
   dataManager.loadFromLocalStorage();
   // After loading saved budgets array, render them in the sidebar
   savedBudgetsManager.updateSavedBudgetsList();
+  // Ensure active budget highlight reflects restored currentBudgetId
+  if (savedBudgetsManager && savedBudgetsManager.highlightActiveBudget) {
+    savedBudgetsManager.highlightActiveBudget();
+  }
     // Attach backup UI (after savedBudgetsManager so list can refresh after import)
     backupManager.attachUI('#export-backup', '#import-backup', '#import-backup-file', savedBudgetsManager);
     uiManager.updateEmptyListVisibility();

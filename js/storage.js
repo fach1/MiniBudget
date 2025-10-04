@@ -55,7 +55,10 @@ export function createStorageManager(budgetState, uiManager, elements, attachIte
         currentSpending: budgetState.currentSpending,
         // New normalized format
         items: serializeItems(),
-        currentBudgetName: budgetState.currentBudgetName
+        currentBudgetName: budgetState.currentBudgetName,
+        // Persist active budget editing context (added after normalization step)
+        currentBudgetId: budgetState.currentBudgetId,
+        isEditMode: budgetState.isEditMode
       };
       localStorage.setItem(STORAGE_KEYS.BUDGET_APP, JSON.stringify(payload));
       localStorage.setItem(STORAGE_KEYS.SAVED_BUDGETS, JSON.stringify(savedBudgets));
@@ -70,6 +73,9 @@ export function createStorageManager(budgetState, uiManager, elements, attachIte
     budgetState.totalBudget = data.totalBudget || 0;
     budgetState.currentSpending = data.currentSpending || 0;
     budgetState.currentBudgetName = data.currentBudgetName || 'Default Budget';
+    // Restore edit context (backward compatible: fields may not exist in older payloads)
+    budgetState.currentBudgetId = data.currentBudgetId || null;
+    budgetState.isEditMode = !!data.isEditMode && !!budgetState.currentBudgetId;
     elements.totalBudgetInput.value = budgetState.totalBudget;
     elements.budgetList.innerHTML = '';
     if (data.items && Array.isArray(data.items)) {
@@ -102,8 +108,9 @@ export function createStorageManager(budgetState, uiManager, elements, attachIte
 
   function loadFromLocalStorage(savedBudgets) {
     try {
-      loadCurrentBudget();
+      // Load saved budgets first so currentBudgetId can be validated/highlighted
       loadSavedBudgets(savedBudgets);
+      loadCurrentBudget();
       uiManager.updateAll();
     } catch (error) {
       console.error('Error loading from localStorage:', error);

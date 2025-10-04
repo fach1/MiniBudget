@@ -11,6 +11,13 @@ export function createBudgetsModule({
   const savedBudgets = savedBudgetsRef.array; // stable reference
 
   const savedBudgetsManager = {
+    // Sync current in-memory active budget (items, totals) back into savedBudgets array entry
+    syncActiveBudget() {
+      if (!budgetState.isEditMode || !budgetState.currentBudgetId) return;
+      const index = savedBudgets.findIndex(b => b.id === budgetState.currentBudgetId);
+      if (index === -1) return;
+      savedBudgets[index] = this.createBudgetObject(budgetState.currentBudgetId, budgetState.currentBudgetName);
+    },
     updateSavedBudgetsList() {
       elements.savedBudgetsList.innerHTML = '';
       savedBudgets.forEach(budget => {
