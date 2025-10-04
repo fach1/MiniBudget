@@ -57,6 +57,16 @@ body {
   box-sizing: border-box;
 }
 
+/* Blur effect when sidebar open */
+body.sidebar-open main,
+body.sidebar-open header,
+body.sidebar-open footer {
+  filter: blur(4px) brightness(0.9);
+  transition: filter 0.25s ease;
+}
+body.sidebar-open #sidebar { filter: none; }
+body.sidebar-open #sidebar-overlay { backdrop-filter: blur(2px); }
+
 header {
   color: var(--header-text);
   text-align: center;
