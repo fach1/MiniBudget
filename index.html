@@ -48,19 +48,35 @@
                 </button>
             </div>
         </div>
-        <nav class="sidebar-content">
-            <ul class="list-group list-group-flush" aria-label="Saved budget list">
+        <nav class="sidebar-content d-flex flex-column h-100">
+            <ul class="list-group list-group-flush flex-grow-1" aria-label="Saved budget list">
                 <!-- Saved budgets will be dynamically added here -->
             </ul>
-                        <div class="px-3 mt-3 d-flex flex-column gap-2">
-                            <button id="export-backup" class="btn btn-sm btn-outline-light" aria-label="Export backup">
-                                <i class="fas fa-download me-2" aria-hidden="true"></i>Export
-                            </button>
-                            <button id="import-backup" class="btn btn-sm btn-outline-light" aria-label="Import backup">
-                                <i class="fas fa-upload me-2" aria-hidden="true"></i>Import
-                            </button>
-                            <input type="file" id="import-backup-file" accept="application/json" style="display:none" aria-hidden="true" />
-                        </div>
+            <div class="sidebar-footer mt-auto">
+                <div class="px-3 pt-3 border-top border-white border-opacity-25">
+                    <h6 class="text-white mb-2">Theme</h6>
+                    <div class="mb-3">
+                        <label for="theme-primary-color" class="form-label text-white small mb-1">Primary Color</label>
+                        <input type="color" id="theme-primary-color" class="form-control form-control-color" value="#28a745" aria-label="Primary theme color picker" />
+                    </div>
+                    <div class="d-flex gap-2 mb-3 flex-wrap">
+                        <button type="button" class="btn btn-sm btn-outline-light preset-theme-btn" data-preset="green">Green</button>
+                        <button type="button" class="btn btn-sm btn-outline-light preset-theme-btn" data-preset="blue">Blue</button>
+                        <button type="button" class="btn btn-sm btn-outline-light preset-theme-btn" data-preset="purple">Purple</button>
+                        <button type="button" class="btn btn-sm btn-outline-light preset-theme-btn" data-preset="dark">Dark</button>
+                    </div>
+                    <button type="button" id="reset-theme" class="btn btn-sm btn-outline-light w-100 mb-3">Reset Theme</button>
+                    <div class="d-flex flex-column gap-2 pb-3">
+                        <button id="export-backup" class="btn btn-sm btn-outline-light" aria-label="Export backup">
+                            <i class="fas fa-download me-2" aria-hidden="true"></i>Export
+                        </button>
+                        <button id="import-backup" class="btn btn-sm btn-outline-light" aria-label="Import backup">
+                            <i class="fas fa-upload me-2" aria-hidden="true"></i>Import
+                        </button>
+                        <input type="file" id="import-backup-file" accept="application/json" style="display:none" aria-hidden="true" />
+                    </div>
+                </div>
+            </div>
         </nav>
     </aside>
     
@@ -117,7 +133,7 @@
                     </div>
                 </div>
                 <div class="col-12">
-                    <button type="submit" class="btn btn-success w-100 ripple-surface">
+                    <button type="submit" class="btn btn-theme w-100 ripple-surface">
                         <i class="fas fa-plus-circle" aria-hidden="true"></i> Add Item
                     </button>
                 </div>

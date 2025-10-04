@@ -8,6 +8,7 @@ import { createBudgetsModule } from './budgets.js';
 import { createItemsManager } from './items.js';
 import { hideModalAndRestoreFocus } from './utils.js';
 import { createBackupManager } from './backup.js';
+import { createThemeManager } from './theme.js';
 
 // This file is an initial modular extraction of the former script.js. Further splitting is possible.
 
@@ -107,6 +108,9 @@ document.addEventListener('DOMContentLoaded', () => {
     savedBudgetsRef
   });
 
+  // Theme manager
+  const themeManager = createThemeManager();
+
   // ================ SAVED BUDGETS MANAGEMENT ================
 
   // ================ EVENT LISTENERS ================
@@ -139,6 +143,8 @@ document.addEventListener('DOMContentLoaded', () => {
     uiManager.updateEmptyListVisibility();
     uiManager.updateSaveButtonState();
     uiManager.updateClearButtonState();
+    // Initialize theme customization (after elements exist)
+    themeManager.init();
     setupEventListeners();
     document.querySelectorAll('.form-outline').forEach((formOutline) => { new mdb.Input(formOutline).init(); });
   }

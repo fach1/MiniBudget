@@ -2,6 +2,13 @@
 :root {
   /* Colors */
   --color-primary: #28a745;
+  /* Theming dynamic colors */
+  --header-bg: var(--color-primary);
+  --header-text: #ffffff;
+  --sidebar-bg: var(--color-primary);
+  --sidebar-text: #ffffff;
+  --button-primary-bg: var(--header-bg);
+  --button-primary-text: var(--header-text);
   --color-primary-light: rgba(255, 255, 255, 0.2);
   --color-primary-hover: rgba(255, 255, 255, 0.3);
   --color-danger: #dc3545;
@@ -51,10 +58,32 @@ body {
 }
 
 header {
-  color: white;
+  color: var(--header-text);
   text-align: center;
-  background-color: var(--color-primary);
+  background-color: var(--header-bg);
   box-shadow: var(--shadow-md);
+}
+
+/* Ensure header utility classes don't freeze original green when theme changes */
+header.bg-success { background-color: var(--header-bg) !important; }
+header.text-white { color: var(--header-text) !important; }
+header .btn-success { background-color: var(--header-bg) !important; border-color: var(--header-bg) !important; }
+header .btn-success:hover { filter: brightness(1.1); }
+header .btn-success i { color: var(--header-text) !important; }
+
+/* Menu button inherits header colors */
+#menu-button { background-color: var(--header-bg) !important; }
+#menu-button:hover { background-color: var(--header-bg) !important; filter: brightness(1.1); }
+
+/* Themed primary button */
+.btn-theme {
+  background-color: var(--button-primary-bg) !important;
+  color: var(--button-primary-text) !important;
+  border-color: var(--button-primary-bg) !important;
+}
+.btn-theme:hover, .btn-theme:focus {
+  filter: brightness(1.1);
+  color: var(--button-primary-text) !important;
 }
 
 h1, h2 {
@@ -191,7 +220,7 @@ button:hover {
 }
 
 #menu-button i {
-  color: white;
+  color: var(--header-text);
   font-size: var(--font-size-large);
 }
 
@@ -202,11 +231,13 @@ button:hover {
   right: calc(-1 * var(--sidebar-width));
   width: var(--sidebar-width);
   height: 100%;
-  background-color: var(--color-primary);
-  color: white;
+  background-color: var(--sidebar-bg);
+  color: var(--sidebar-text);
   z-index: 1001;
   transition: var(--transition-sidebar);
   box-shadow: var(--shadow-sidebar);
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar.active {
@@ -223,6 +254,13 @@ button:hover {
 
 .sidebar-content {
   padding: 1rem 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-footer {
+  width: 100%;
 }
 
 .sidebar .list-group-item {
@@ -234,7 +272,7 @@ button:hover {
 }
 
 .sidebar .list-group-item a {
-  color: white;
+  color: var(--sidebar-text);
   text-decoration: none;
   display: block;
   padding: 0.5rem 0;
