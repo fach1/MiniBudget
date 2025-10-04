@@ -295,7 +295,21 @@ document.addEventListener('DOMContentLoaded', () => {
         attachItemEventHandlers(listItem) {
             const deleteBtn = listItem.querySelector('.delete-btn');
             if (deleteBtn) {
-                deleteBtn.addEventListener('click', itemsManager.handleDeleteItem);
+                deleteBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const li = e.target.closest('li');
+                    if (!li) return;
+                    itemsManager.itemPendingDeletion = li;
+                    // Set name in modal
+                    const nameEl = li.querySelector('strong');
+                    const nameHolder = document.getElementById('delete-item-name');
+                    if (nameEl && nameHolder) nameHolder.textContent = nameEl.textContent.trim();
+                    const modalEl = document.getElementById('confirmDeleteItemModal');
+                    if (modalEl) {
+                        const instance = mdb.Modal.getInstance(modalEl) || new mdb.Modal(modalEl);
+                        instance.show();
+                    }
+                });
             }
 
             const incrementBtn = listItem.querySelector('.increment-btn');
@@ -382,8 +396,27 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.delete-budget-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    const budgetId = e.target.closest('button').getAttribute('data-id');
-                    this.deleteSavedBudget(budgetId);
+                    const buttonEl = e.target.closest('button');
+                    const budgetId = buttonEl.getAttribute('data-id');
+                    const budget = savedBudgets.find(b => b.id === budgetId);
+                    if (!budget) return;
+
+                    // Store the id temporarily on the confirm button dataset
+                    const confirmBtn = document.getElementById('confirm-delete-budget-btn');
+                    if (confirmBtn) {
+                        confirmBtn.dataset.deleteBudgetId = budgetId;
+                    }
+
+                    // Set budget name in modal
+                    const nameHolder = document.getElementById('delete-budget-name');
+                    if (nameHolder) nameHolder.textContent = budget.name;
+
+                    // Show modal
+                    const modalEl = document.getElementById('confirmDeleteBudgetModal');
+                    if (modalEl) {
+                        const instance = mdb.Modal.getInstance(modalEl) || new mdb.Modal(modalEl);
+                        instance.show();
+                    }
                 });
             });
         },
@@ -419,6 +452,13 @@ document.addEventListener('DOMContentLoaded', () => {
             savedBudgets = savedBudgets.filter(b => b.id !== budgetId);
             this.updateSavedBudgetsList();
             dataManager.saveToLocalStorage();
+
+            // If we deleted the current loaded budget, reset to new budget state
+            if (budgetState.currentBudgetId === budgetId) {
+                savedBudgetsManager.createNewBudget();
+                uiManager.updateAll();
+                dataManager.saveToLocalStorage();
+            }
         },
 
         saveBudget(budgetName) {
@@ -695,7 +735,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         handleDeleteItem(event) {
-            const listItem = event.target.closest('li');
+            const listItem = event && event.target ? event.target.closest('li') : itemsManager.itemPendingDeletion;
             if (!listItem) {
                 console.error('List item not found. Ensure the delete button is inside a list item.');
                 return;
@@ -803,6 +843,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Cleanup
             itemsManager.itemBeingEdited = null;
+        },
+
+        confirmDeleteItem() {
+            if (!itemsManager.itemPendingDeletion) return;
+            // Reuse existing logic
+            itemsManager.handleDeleteItem({ target: itemsManager.itemPendingDeletion.querySelector('.delete-btn') });
+            itemsManager.itemPendingDeletion = null;
+            const modalEl = document.getElementById('confirmDeleteItemModal');
+            if (modalEl) {
+                const instance = mdb.Modal.getInstance(modalEl);
+                if (instance) instance.hide();
+            }
         },
 
         handleClearAllItems() {
@@ -932,6 +984,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 const instance = mdb.Modal.getInstance(modalEl);
                 if (instance) instance.hide();
             });
+        }
+
+        // Confirm delete saved budget button
+        const confirmDeleteBudgetBtn = document.getElementById('confirm-delete-budget-btn');
+        if (confirmDeleteBudgetBtn) {
+            confirmDeleteBudgetBtn.addEventListener('click', () => {
+                const budgetId = confirmDeleteBudgetBtn.dataset.deleteBudgetId;
+                if (budgetId) {
+                    savedBudgetsManager.deleteSavedBudget(budgetId);
+                }
+                // Close modal
+                const modalEl = document.getElementById('confirmDeleteBudgetModal');
+                const instance = mdb.Modal.getInstance(modalEl);
+                if (instance) instance.hide();
+                // Cleanup dataset
+                delete confirmDeleteBudgetBtn.dataset.deleteBudgetId;
+            });
+        }
+
+        // Confirm delete item button
+        const confirmDeleteItemBtn = document.getElementById('confirm-delete-item-btn');
+        if (confirmDeleteItemBtn) {
+            confirmDeleteItemBtn.addEventListener('click', itemsManager.confirmDeleteItem);
         }
         
         // Clear all button

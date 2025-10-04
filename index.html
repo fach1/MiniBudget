@@ -233,6 +233,48 @@
         </div>
     </div>
     
+    <!-- Delete Saved Budget Confirmation Modal -->
+    <div class="modal fade" id="confirmDeleteBudgetModal" tabindex="-1" aria-labelledby="confirmDeleteBudgetModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white py-2">
+                    <h5 class="modal-title" id="confirmDeleteBudgetModalLabel"><i class="fas fa-exclamation-triangle me-2"></i>Delete Budget</h5>
+                    <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">Are you sure you want to delete the budget <strong id="delete-budget-name"></strong>? This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-mdb-dismiss="modal">Cancel</button>
+                    <button type="button" id="confirm-delete-budget-btn" class="btn btn-danger btn-sm">
+                        <i class="fas fa-trash me-2"></i>Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Delete Item Confirmation Modal -->
+    <div class="modal fade" id="confirmDeleteItemModal" tabindex="-1" aria-labelledby="confirmDeleteItemModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white py-2">
+                    <h5 class="modal-title" id="confirmDeleteItemModalLabel"><i class="fas fa-trash-alt me-2"></i>Delete Item</h5>
+                    <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">Delete item <strong id="delete-item-name"></strong>? This cannot be undone.</p>
+                </div>
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-mdb-dismiss="modal">Cancel</button>
+                    <button type="button" id="confirm-delete-item-btn" class="btn btn-danger btn-sm">
+                        <i class="fas fa-trash me-2"></i>Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- External scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.3.0/mdb.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
