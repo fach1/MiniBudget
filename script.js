@@ -40,7 +40,12 @@ document.addEventListener('DOMContentLoaded', () => {
             confirmSaveBtn: '#confirm-save-btn',
             budgetNameInput: '#budget-name-input',
             savedBudgetsList: '.sidebar-content ul',
-            newBudgetBtn: '#new-budget-btn'
+            newBudgetBtn: '#new-budget-btn',
+            editItemModal: '#editItemModal',
+            editItemName: '#edit-item-name',
+            editItemPrice: '#edit-item-price',
+            editItemQuantity: '#edit-item-quantity',
+            confirmEditItemBtn: '#confirm-edit-item'
         };
 
         const elements = {};
@@ -164,13 +169,44 @@ document.addEventListener('DOMContentLoaded', () => {
             if (budgetState.isEditMode && budgetState.currentBudgetId) {
                 saveBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Update';
                 saveBtn.setAttribute('data-original-title', 'Update current budget');
-                saveBtn.classList.add('btn-outline-primary');
-                saveBtn.classList.remove('btn-outline-success');
+                // Force green outline for update state
+                saveBtn.classList.add('btn-outline-success');
+                saveBtn.classList.remove('btn-outline-primary');
             } else {
                 saveBtn.innerHTML = '<i class="fas fa-save"></i> Save';
                 saveBtn.setAttribute('data-original-title', 'Save as new budget');
                 saveBtn.classList.add('btn-outline-success');
                 saveBtn.classList.remove('btn-outline-primary');
+            }
+
+            // Also update the Clear/New Budget button state
+            this.updateClearButtonState();
+        },
+
+        updateClearButtonState() {
+            const clearBtn = elements.clearItemsBtn;
+            if (!clearBtn) return;
+
+            // Remove any previously attached new budget handler if present
+            if (clearBtn._newBudgetHandler) {
+                clearBtn.removeEventListener('click', clearBtn._newBudgetHandler);
+                delete clearBtn._newBudgetHandler;
+            }
+
+            if (budgetState.isEditMode && budgetState.currentBudgetId) {
+                // Switch to New Budget mode
+                clearBtn.innerHTML = '<i class="fas fa-file"></i> New Budget';
+                clearBtn.classList.remove('btn-outline-danger');
+                clearBtn.classList.add('btn-outline-secondary');
+                clearBtn.setAttribute('data-mdb-toggle', 'modal');
+                clearBtn.setAttribute('data-mdb-target', '#confirmNewBudgetModal');
+            } else {
+                // Revert to Clear mode
+                clearBtn.innerHTML = '<i class="fas fa-trash" aria-hidden="true"></i> Clear';
+                clearBtn.classList.add('btn-outline-danger');
+                clearBtn.classList.remove('btn-outline-secondary');
+                clearBtn.setAttribute('data-mdb-toggle', 'modal');
+                clearBtn.setAttribute('data-mdb-target', '#confirmClearModal');
             }
         },
 
@@ -178,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const saveBtn = elements.saveBudgetBtn;
             const originalText = saveBtn.innerHTML;
             const messageText = isUpdate ? '<i class="fas fa-check"></i> Updated!' : '<i class="fas fa-check"></i> Saved!';
-            const originalClass = isUpdate ? 'btn-outline-primary' : 'btn-outline-success';
+            const originalClass = 'btn-outline-success';
             const successClass = 'btn-success';
             
             saveBtn.innerHTML = messageText;
@@ -270,6 +306,25 @@ document.addEventListener('DOMContentLoaded', () => {
             const decrementBtn = listItem.querySelector('.decrement-btn');
             if (decrementBtn) {
                 decrementBtn.addEventListener('click', itemsManager.handleDecrementItem);
+            }
+
+            // Ensure edit button exists (for backward compatibility with previously saved items)
+            let editBtn = listItem.querySelector('.edit-btn');
+            const controlsContainer = listItem.querySelector('.d-flex.align-items-center');
+            const deleteBtnCurrent = listItem.querySelector('.delete-btn');
+            if (!editBtn && controlsContainer) {
+                editBtn = document.createElement('button');
+                editBtn.className = 'btn btn-outline-primary btn-sm edit-btn ms-2';
+                editBtn.textContent = 'Edit';
+                // Insert before delete button if present, else append
+                if (deleteBtnCurrent) {
+                    controlsContainer.insertBefore(editBtn, deleteBtnCurrent);
+                } else {
+                    controlsContainer.appendChild(editBtn);
+                }
+            }
+            if (editBtn) {
+                editBtn.addEventListener('click', itemsManager.openEditModal);
             }
         },
 
@@ -413,6 +468,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Update UI
             this.updateSavedBudgetsList();
             dataManager.saveToLocalStorage();
+            uiManager.updateSaveButtonState();
             
             return true;
         },
@@ -549,6 +605,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button class="btn btn-outline-secondary btn-sm decrement-btn">-</button>
                     <span class="mx-2 item-quantity">1</span>
                     <button class="btn btn-outline-secondary btn-sm increment-btn">+</button>
+                    <button class="btn btn-outline-primary btn-sm edit-btn ms-2">Edit</button>
                     <button class="btn btn-danger btn-sm delete-btn ms-3">Delete</button>
                 </div>
             `;
@@ -675,8 +732,87 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         },
 
+        openEditModal(event) {
+            const listItem = event.target.closest('li');
+            if (!listItem) return;
+
+            // Store temporary reference
+            itemsManager.itemBeingEdited = listItem;
+
+            const nameElement = listItem.querySelector('strong');
+            const badgeElement = listItem.querySelector('.badge');
+            const quantityElement = listItem.querySelector('.item-quantity');
+            if (!nameElement || !badgeElement || !quantityElement) return;
+
+            const unitPrice = parseFloat(badgeElement.getAttribute('data-unit-price'));
+
+            elements.editItemName.value = nameElement.textContent.trim();
+            elements.editItemPrice.value = unitPrice.toFixed(2);
+            elements.editItemQuantity.value = quantityElement.textContent.trim();
+
+            // Initialize form-outline inputs inside modal (MDB requirement)
+            document.querySelectorAll('#editItemModal .form-outline').forEach((formOutline) => {
+                new mdb.Input(formOutline).init();
+            });
+
+            const modalEl = document.getElementById('editItemModal');
+            itemsManager.editModalInstance = mdb.Modal.getInstance(modalEl) || new mdb.Modal(modalEl);
+            itemsManager.editModalInstance.show();
+        },
+
+        confirmEditChanges() {
+            const listItem = itemsManager.itemBeingEdited;
+            if (!listItem) return;
+
+            const nameElement = listItem.querySelector('strong');
+            const badgeElement = listItem.querySelector('.badge');
+            const quantityElement = listItem.querySelector('.item-quantity');
+            if (!nameElement || !badgeElement || !quantityElement) return;
+
+            const prevUnitPrice = parseFloat(badgeElement.getAttribute('data-unit-price'));
+            const prevQuantity = parseInt(quantityElement.textContent, 10);
+
+            const newName = elements.editItemName.value.trim();
+            const newUnitPrice = parseFloat(elements.editItemPrice.value);
+            const newQuantity = parseInt(elements.editItemQuantity.value, 10);
+
+            if (!newName || isNaN(newUnitPrice) || newUnitPrice <= 0 || isNaN(newQuantity) || newQuantity <= 0) {
+                alert('Datos inválidos. Verifica nombre, precio (>0) y cantidad (>=1).');
+                return;
+            }
+
+            // Recalculate spending
+            const oldTotal = prevUnitPrice * prevQuantity;
+            const newTotal = newUnitPrice * newQuantity;
+            budgetState.currentSpending += (newTotal - oldTotal);
+
+            // Update DOM
+            nameElement.textContent = newName;
+            quantityElement.textContent = newQuantity;
+            badgeElement.setAttribute('data-unit-price', newUnitPrice.toFixed(2));
+            badgeElement.textContent = `$${newTotal.toFixed(2)}`;
+
+            // Persist and UI
+            uiManager.updateAll();
+            dataManager.saveToLocalStorage();
+
+            // Close modal
+            if (itemsManager.editModalInstance) {
+                itemsManager.editModalInstance.hide();
+            }
+
+            // Cleanup
+            itemsManager.itemBeingEdited = null;
+        },
+
         handleClearAllItems() {
+            // Obtener instancia del modal para cerrarlo después
+            const clearModalEl = document.getElementById('confirmClearModal');
+            const clearModalInstance = clearModalEl ? mdb.Modal.getInstance(clearModalEl) : null;
+
             if (elements.budgetList.children.length === 0) {
+                // Cerrar modal aunque no haya items
+                if (clearModalInstance) clearModalInstance.hide();
                 console.log('No items to clear');
                 return;
             }
@@ -695,6 +831,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (budgetState.isEditMode && budgetState.currentBudgetId) {
                 savedBudgetsManager.createNewBudget();
             }
+
+            // Cerrar modal tras limpiar
+            if (clearModalInstance) clearModalInstance.hide();
         }
     };
 
@@ -769,6 +908,31 @@ document.addEventListener('DOMContentLoaded', () => {
         if (elements.confirmSaveBtn) {
             elements.confirmSaveBtn.addEventListener('click', budgetManager.handleConfirmSaveBudget);
         }
+
+        // Confirm edit item button
+        if (elements.confirmEditItemBtn) {
+            elements.confirmEditItemBtn.addEventListener('click', itemsManager.confirmEditChanges);
+        }
+
+        // Confirm new budget button
+        const confirmNewBudgetBtn = document.getElementById('confirm-new-budget-btn');
+        if (confirmNewBudgetBtn) {
+            confirmNewBudgetBtn.addEventListener('click', () => {
+                // Perform new budget reset
+                elements.budgetList.innerHTML = '';
+                elements.totalBudgetInput.value = '';
+                budgetState.totalBudget = 0;
+                budgetState.currentSpending = 0;
+                savedBudgetsManager.createNewBudget();
+                uiManager.updateAll();
+                dataManager.saveToLocalStorage();
+
+                // Close modal
+                const modalEl = document.getElementById('confirmNewBudgetModal');
+                const instance = mdb.Modal.getInstance(modalEl);
+                if (instance) instance.hide();
+            });
+        }
         
         // Clear all button
         const confirmClearBtn = document.getElementById('confirm-clear-btn');
@@ -807,6 +971,7 @@ document.addEventListener('DOMContentLoaded', () => {
         dataManager.loadFromLocalStorage();
         uiManager.updateEmptyListVisibility();
         uiManager.updateSaveButtonState(); // Initialize the save button state
+    uiManager.updateClearButtonState();
         setupEventListeners();
 
         // Initialize Material Design Bootstrap components
