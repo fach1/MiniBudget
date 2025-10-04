@@ -52,6 +52,15 @@
             <ul class="list-group list-group-flush" aria-label="Saved budget list">
                 <!-- Saved budgets will be dynamically added here -->
             </ul>
+                        <div class="px-3 mt-3 d-flex flex-column gap-2">
+                            <button id="export-backup" class="btn btn-sm btn-outline-light" aria-label="Export backup">
+                                <i class="fas fa-download me-2" aria-hidden="true"></i>Export
+                            </button>
+                            <button id="import-backup" class="btn btn-sm btn-outline-light" aria-label="Import backup">
+                                <i class="fas fa-upload me-2" aria-hidden="true"></i>Import
+                            </button>
+                            <input type="file" id="import-backup-file" accept="application/json" style="display:none" aria-hidden="true" />
+                        </div>
         </nav>
     </aside>
     

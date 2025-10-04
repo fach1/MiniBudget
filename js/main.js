@@ -7,6 +7,7 @@ import { createSidebarManager } from './sidebar.js';
 import { createBudgetsModule } from './budgets.js';
 import { createItemsManager } from './items.js';
 import { hideModalAndRestoreFocus } from './utils.js';
+import { createBackupManager } from './backup.js';
 
 // This file is an initial modular extraction of the former script.js. Further splitting is possible.
 
@@ -97,6 +98,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const getDataManager = () => dataManager;
   const itemsManager = createItemsManager({ budgetState, uiManager, elements, getDataManager, savedBudgetsManager });
 
+  // Backup manager
+  const backupManager = createBackupManager({
+    budgetState,
+    dataManager,
+    uiManager,
+    elements,
+    savedBudgetsRef
+  });
+
   // ================ SAVED BUDGETS MANAGEMENT ================
 
   // ================ EVENT LISTENERS ================
@@ -120,6 +130,8 @@ document.addEventListener('DOMContentLoaded', () => {
   dataManager.loadFromLocalStorage();
   // After loading saved budgets array, render them in the sidebar
   savedBudgetsManager.updateSavedBudgetsList();
+    // Attach backup UI (after savedBudgetsManager so list can refresh after import)
+    backupManager.attachUI('#export-backup', '#import-backup', '#import-backup-file', savedBudgetsManager);
     uiManager.updateEmptyListVisibility();
     uiManager.updateSaveButtonState();
     uiManager.updateClearButtonState();
