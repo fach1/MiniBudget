@@ -10,7 +10,8 @@ export function createItemsManager({ budgetState, uiManager, elements, getDataMa
       try {
         const amount = parseFloat(amountValue); if (isNaN(amount) || amount <= 0) return; const formattedAmount = amount.toFixed(2); const existingItem = this.findExistingItem(itemName);
         if (existingItem) { this.incrementExistingItem(existingItem); } else { this.addNewItem(itemName, amount, formattedAmount); }
-  uiManager.updateAll(); if (savedBudgetsManager && savedBudgetsManager.syncActiveBudget) { savedBudgetsManager.syncActiveBudget(); } getDataManager().saveToLocalStorage(); elements.form.reset();
+  uiManager.updateAll(); if (savedBudgetsManager && savedBudgetsManager.syncActiveBudget) { savedBudgetsManager.syncActiveBudget(); } getDataManager().saveToLocalStorage(); elements.form.reset(); elements.itemNameInput.focus();
+  if (navigator.vibrate) navigator.vibrate(50);
       } catch (error) { console.error('Error adding item:', error); }
     },
     findExistingItem(itemName) { const existingItems = Array.from(elements.budgetList.querySelectorAll('li')); return existingItems.find(item => { const itemNameElement = item.querySelector('strong'); return itemNameElement && itemNameElement.textContent === itemName; }); },
@@ -39,14 +40,14 @@ export function createItemsManager({ budgetState, uiManager, elements, getDataMa
       const listItem = event.target.closest('li'); if (!listItem) return;
       try {
         const quantityElement = listItem.querySelector('.item-quantity'); const badgeElement = listItem.querySelector('.badge'); const unitPriceAttr = badgeElement.getAttribute('data-unit-price');
-  if (quantityElement && badgeElement && unitPriceAttr) { const unitPrice = parseFloat(unitPriceAttr); const currentQuantity = parseInt(quantityElement.textContent, 10); const newQuantity = currentQuantity + 1; quantityElement.textContent = newQuantity; const newTotal = (unitPrice * newQuantity).toFixed(2); badgeElement.textContent = `$${newTotal}`; budgetState.currentSpending += unitPrice; uiManager.updateAll(); if (savedBudgetsManager && savedBudgetsManager.syncActiveBudget) { savedBudgetsManager.syncActiveBudget(); } getDataManager().saveToLocalStorage(); }
+  if (quantityElement && badgeElement && unitPriceAttr) { const unitPrice = parseFloat(unitPriceAttr); const currentQuantity = parseInt(quantityElement.textContent, 10); const newQuantity = currentQuantity + 1; quantityElement.textContent = newQuantity; const newTotal = (unitPrice * newQuantity).toFixed(2); badgeElement.textContent = `$${newTotal}`; budgetState.currentSpending += unitPrice; uiManager.updateAll(); if (savedBudgetsManager && savedBudgetsManager.syncActiveBudget) { savedBudgetsManager.syncActiveBudget(); } getDataManager().saveToLocalStorage(); if (navigator.vibrate) navigator.vibrate(50); }
       } catch (error) { console.error('Error incrementing item:', error); }
     },
     handleDecrementItem(event) {
       const listItem = event.target.closest('li'); if (!listItem) return;
       try {
         const quantityElement = listItem.querySelector('.item-quantity'); const badgeElement = listItem.querySelector('.badge'); const unitPriceAttr = badgeElement.getAttribute('data-unit-price');
-  if (quantityElement && badgeElement && unitPriceAttr) { const unitPrice = parseFloat(unitPriceAttr); const currentQuantity = parseInt(quantityElement.textContent, 10); if (currentQuantity <= 1) { this.handleDeleteItem({ target: listItem.querySelector('.delete-btn') }); return; } const newQuantity = currentQuantity - 1; quantityElement.textContent = newQuantity; const newTotal = (unitPrice * newQuantity).toFixed(2); badgeElement.textContent = `$${newTotal}`; budgetState.currentSpending -= unitPrice; uiManager.updateAll(); if (savedBudgetsManager && savedBudgetsManager.syncActiveBudget) { savedBudgetsManager.syncActiveBudget(); } getDataManager().saveToLocalStorage(); }
+  if (quantityElement && badgeElement && unitPriceAttr) { const unitPrice = parseFloat(unitPriceAttr); const currentQuantity = parseInt(quantityElement.textContent, 10); if (currentQuantity <= 1) { this.handleDeleteItem({ target: listItem.querySelector('.delete-btn') }); return; } const newQuantity = currentQuantity - 1; quantityElement.textContent = newQuantity; const newTotal = (unitPrice * newQuantity).toFixed(2); badgeElement.textContent = `$${newTotal}`; budgetState.currentSpending -= unitPrice; uiManager.updateAll(); if (savedBudgetsManager && savedBudgetsManager.syncActiveBudget) { savedBudgetsManager.syncActiveBudget(); } getDataManager().saveToLocalStorage(); if (navigator.vibrate) navigator.vibrate(50); }
       } catch (error) { console.error('Error decrementing item:', error); }
     },
     handleDeleteItem(event) {

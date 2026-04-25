@@ -126,7 +126,26 @@ document.addEventListener('DOMContentLoaded', () => {
   const confirmClearBtn = document.getElementById('confirm-clear-btn'); if (confirmClearBtn) { confirmClearBtn.addEventListener('click', () => { itemsManager.handleClearAllItems(); hideModalAndRestoreFocus('confirmClearModal', '#clear-items'); }); }
   if (elements.newBudgetBtn) { elements.newBudgetBtn.addEventListener('click', () => { elements.budgetList.innerHTML=''; elements.totalBudgetInput.value=''; budgetState.totalBudget=0; budgetState.currentSpending=0; savedBudgetsManager.createNewBudget(); uiManager.updateAll(); dataManager.saveToLocalStorage(); sidebarManager.toggle(); }); }
   sidebarManager.setup();
+  
+  // Re-request wake lock when visibility changes
+  document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState === 'visible' && 'wakeLock' in navigator) {
+      requestWakeLock();
+    }
+  });
   }
+
+  // Wake Lock state
+  let wakeLock = null;
+  const requestWakeLock = async () => {
+    try {
+      if ('wakeLock' in navigator) {
+        wakeLock = await navigator.wakeLock.request('screen');
+      }
+    } catch (err) {
+      console.log(`Wake Lock error: ${err.name}, ${err.message}`);
+    }
+  };
 
   // ================ INITIALIZATION ================
   function initializeApp() {
@@ -146,6 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize theme customization (after elements exist)
     themeManager.init();
     setupEventListeners();
+    requestWakeLock();
     document.querySelectorAll('.form-outline').forEach((formOutline) => { new mdb.Input(formOutline).init(); });
   }
 

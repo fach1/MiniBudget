@@ -101,9 +101,9 @@
             
             <!-- Budget Input -->
             <div class="mt-3">
-                <div class="form-outline w-50 mx-auto">
+                <div class="form-outline w-100 w-md-50 mx-auto">
                     <input type="number" id="total-budget-input" class="form-control" 
-                           step="0.01" min="0" placeholder=" " aria-label="Total budget amount" />
+                           step="0.01" min="0" inputmode="decimal" placeholder=" " aria-label="Total budget amount" />
                     <label class="form-label" for="total-budget-input">Total Budget</label>
                 </div>
             </div>
@@ -118,17 +118,17 @@
         <section id="budget-form" class="mb-4">
             <h4 class="mt-3">Add Item</h4>
             <form class="row g-3" aria-label="Add budget item form">
-                <div class="col-md-6">
+                <div class="col-8">
                     <div class="form-outline">
                         <input type="text" id="item-name" name="item-name" class="form-control" 
                                placeholder=" " required aria-label="Item name" />
                         <label class="form-label" for="item-name">Item Name</label>
                     </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-4">
                     <div class="form-outline">
                         <input type="number" id="amount" name="amount" class="form-control" 
-                               step="0.01" min="0.01" placeholder=" " required aria-label="Item price" />
+                               step="0.01" min="0.01" inputmode="decimal" placeholder=" " required aria-label="Item price" />
                         <label class="form-label" for="amount">Price</label>
                     </div>
                 </div>
@@ -250,7 +250,7 @@
                             <label class="form-label" for="edit-item-name">Item Name</label>
                         </div>
                         <div class="form-outline mb-3">
-                            <input type="number" id="edit-item-price" class="form-control" step="0.01" min="0.01" placeholder=" " required aria-label="Edit unit price" />
+                            <input type="number" id="edit-item-price" class="form-control" step="0.01" min="0.01" inputmode="decimal" placeholder=" " required aria-label="Edit unit price" />
                             <label class="form-label" for="edit-item-price">Unit Price</label>
                         </div>
                         <div class="form-outline mb-3">

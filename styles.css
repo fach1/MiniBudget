@@ -111,7 +111,7 @@ ul {
   padding: 0;
 }
 
-form {
+form:not(.row) {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -140,9 +140,9 @@ button:hover {
   align-items: center;
   justify-content: center;
   width: 100%;
-  max-width: 150px;
+  max-width: 250px;
   height: auto;
-  min-height: 150px;
+  min-height: 250px;
   position: relative;
 }
 
@@ -363,6 +363,30 @@ body.dark-mode .btn:hover {
 
 body.dark-mode .sidebar {
   background-color: var(--color-bg-darker);
+}
+
+body.dark-mode .form-control {
+  background-color: var(--color-bg-darker);
+  color: var(--color-light);
+  border-color: var(--color-bg-hover);
+}
+
+body.dark-mode .form-control:focus {
+  background-color: var(--color-bg-darker);
+  color: var(--color-light);
+}
+
+body.dark-mode .form-label {
+  color: #adb5bd;
+}
+
+body.dark-mode .form-outline .form-control~.form-label {
+  color: #adb5bd;
+}
+
+body.dark-mode .list-group-item {
+  background-color: var(--color-bg-dark);
+  color: var(--color-light);
 }
 
 /* =============== RESPONSIVE ADJUSTMENTS =============== */

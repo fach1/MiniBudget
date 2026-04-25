@@ -5,7 +5,15 @@ export function createUIManager(budgetState, elements, chartModule) {
     elements.totalBudgetDisplay.textContent = `$${budgetState.totalBudget.toFixed(2)}`;
     const remaining = budgetState.totalBudget - budgetState.currentSpending;
     elements.remainingBudgetDisplay.textContent = `$${remaining.toFixed(2)}`;
-    elements.remainingBudgetDisplay.className = remaining < 0 ? UI_CLASSES.DANGER : UI_CLASSES.PRIMARY;
+    
+    // Traffic light logic
+    if (remaining < 0) {
+        elements.remainingBudgetDisplay.className = UI_CLASSES.DANGER;
+    } else if (budgetState.totalBudget > 0 && remaining <= (budgetState.totalBudget * 0.2)) {
+        elements.remainingBudgetDisplay.className = 'text-warning'; // Orange when <= 20%
+    } else {
+        elements.remainingBudgetDisplay.className = UI_CLASSES.PRIMARY;
+    }
   }
 
   function updateEmptyListVisibility() {
