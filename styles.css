@@ -177,8 +177,13 @@ button:hover {
 
 #budget-list .list-group-item {
   border: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
   padding: 1rem;
   transition: var(--transition-normal);
+}
+
+#budget-list .list-group-item:last-child {
+  border-bottom: none;
 }
 
 #budget-list .list-group-item:hover {
@@ -387,6 +392,7 @@ body.dark-mode .form-outline .form-control~.form-label {
 body.dark-mode .list-group-item {
   background-color: var(--color-bg-dark);
   color: var(--color-light);
+  border-bottom-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 /* =============== RESPONSIVE ADJUSTMENTS =============== */

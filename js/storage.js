@@ -6,7 +6,7 @@ export function createStorageManager(budgetState, uiManager, elements, attachIte
   function serializeItems() {
     return Array.from(elements.budgetList.children).map(li => {
       const nameEl = li.querySelector('strong');
-      const badge = li.querySelector('.badge');
+      const badge = li.querySelector('.price-display');
       const qtyEl = li.querySelector('.item-quantity');
       const unitPrice = parseFloat(badge?.getAttribute('data-unit-price'));
       const quantity = parseInt(qtyEl?.textContent || '1', 10) || 1;
@@ -27,22 +27,26 @@ export function createStorageManager(budgetState, uiManager, elements, attachIte
     itemsArray.forEach(obj => {
       if (!obj || typeof obj !== 'object') return;
       const li = document.createElement('li');
-      li.className = 'list-group-item d-flex justify-content-between align-items-center';
+      li.className = 'list-group-item';
       li.dataset.id = obj.id || `item-${Date.now()}-${Math.random().toString(16).slice(2)}`;
       li.dataset.createdAt = obj.createdAt || new Date().toISOString();
       const total = ((obj.unitPrice || 0) * (obj.quantity || 1)).toFixed(2);
       const unitPriceFixed = (obj.unitPrice || 0).toFixed(2);
       li.innerHTML = `
-        <div>
-          <strong>${obj.name || 'Unnamed'}</strong>
-          <span class="badge bg-primary rounded-pill ms-2" data-unit-price="${unitPriceFixed}">$${total}</span>
+        <div class="d-flex justify-content-between align-items-center w-100 mb-2">
+          <strong class="fs-6">${obj.name || 'Unnamed'}</strong>
+          <span class="text-success fw-bold fs-5 price-display" data-unit-price="${unitPriceFixed}">$${total}</span>
         </div>
-        <div class="d-flex align-items-center">
-          <button class="btn btn-outline-secondary btn-sm decrement-btn">-</button>
-          <span class="mx-2 item-quantity">${obj.quantity || 1}</span>
-          <button class="btn btn-outline-secondary btn-sm increment-btn">+</button>
-          <button class="btn btn-outline-primary btn-sm edit-btn ms-2">Edit</button>
-          <button class="btn btn-danger btn-sm delete-btn ms-3">Delete</button>
+        <div class="d-flex justify-content-between align-items-center w-100">
+          <div class="d-flex align-items-center">
+            <button class="btn btn-outline-secondary btn-sm decrement-btn px-3" aria-label="Decrease quantity">-</button>
+            <span class="mx-3 item-quantity fw-bold">${obj.quantity || 1}</span>
+            <button class="btn btn-outline-secondary btn-sm increment-btn px-3" aria-label="Increase quantity">+</button>
+          </div>
+          <div>
+            <button class="btn btn-outline-primary btn-sm edit-btn me-2" aria-label="Edit item" title="Edit"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-danger btn-sm delete-btn" aria-label="Delete item" title="Delete"><i class="fas fa-trash"></i></button>
+          </div>
         </div>`;
       attachItemEventHandlersRef(li);
       elements.budgetList.appendChild(li);
