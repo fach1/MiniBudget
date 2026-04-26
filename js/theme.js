@@ -1,7 +1,6 @@
 // Theme Manager: handles dynamic color customization for header and sidebar
-import { STORAGE_KEYS } from './constants.js';
-
 const THEME_STORAGE_KEY = 'minibudgetTheme';
+const DARK_MODE_STORAGE_KEY = 'minibudgetDarkMode';
 
 const PRESETS = {
   green: { primary: '#28a745' },
@@ -26,16 +25,51 @@ function bestTextColor(bgHex) {
   return lum < 0.5 ? '#ffffff' : '#111111';
 }
 
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function shadeHex(hex, percent) {
+  const h = hex.replace('#', '');
+  if (h.length !== 6) return hex;
+  const amt = Math.round(255 * (percent / 100));
+  const r = clamp(parseInt(h.slice(0, 2), 16) + amt, 0, 255);
+  const g = clamp(parseInt(h.slice(2, 4), 16) + amt, 0, 255);
+  const b = clamp(parseInt(h.slice(4, 6), 16) + amt, 0, 255);
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+}
+
 function applyTheme({ primary, text }) {
   const root = document.documentElement;
   if (primary) {
     const auto = bestTextColor(primary);
-    root.style.setProperty('--header-bg', primary);
+    const hover = shadeHex(primary, -10);
+    const sidebarText = text || auto;
+    const isLightText = sidebarText.toLowerCase() === '#ffffff';
+    const sidebarBorder = isLightText ? 'rgba(255, 255, 255, 0.14)' : 'rgba(0, 0, 0, 0.08)';
+    const sidebarControlBg = isLightText ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.04)';
+    const sidebarControlHoverBg = isLightText ? 'rgba(255, 255, 255, 0.20)' : 'rgba(0, 0, 0, 0.08)';
+
+    // Tailwind tokens used by custom colors (theme / themeHover)
+    root.style.setProperty('--color-primary', primary);
+    root.style.setProperty('--color-primary-hover', hover);
+    root.style.setProperty('--color-primary-light', shadeHex(primary, 50));
+
+    // Sidebar-specific tokens used by Tailwind arbitrary value utilities
     root.style.setProperty('--sidebar-bg', primary);
+    root.style.setProperty('--sidebar-text', sidebarText);
+    root.style.setProperty('--sidebar-border', sidebarBorder);
+    root.style.setProperty('--sidebar-control-bg', sidebarControlBg);
+    root.style.setProperty('--sidebar-control-hover-bg', sidebarControlHoverBg);
+
+    // App semantic aliases (kept for compatibility with existing CSS)
+    root.style.setProperty('--header-bg', primary);
     root.style.setProperty('--button-primary-bg', primary);
     root.style.setProperty('--header-text', text || auto);
-    root.style.setProperty('--sidebar-text', text || auto);
     root.style.setProperty('--button-primary-text', text || auto);
+
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) metaThemeColor.setAttribute('content', primary);
   }
 }
 
@@ -62,13 +96,41 @@ function saveTheme(themeObj) {
 }
 
 export function createThemeManager() {
-  let currentTheme = { primary: getComputedStyle(document.documentElement).getPropertyValue('--header-bg').trim() || '#28a745', text: '#ffffff' };
+  let currentTheme = { primary: getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#28a745', text: '#ffffff' };
+  let isDarkMode = false;
+
+  function applyDarkMode(enabled) {
+    isDarkMode = enabled;
+    if (enabled) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    try {
+      localStorage.setItem(DARK_MODE_STORAGE_KEY, enabled ? '1' : '0');
+    } catch (e) { /* ignore */ }
+    const toggle = document.getElementById('dark-mode-toggle');
+    if (toggle) toggle.checked = enabled;
+  }
+
+  function loadDarkModePreference() {
+    try {
+      const stored = localStorage.getItem(DARK_MODE_STORAGE_KEY);
+      return stored === '1';
+    } catch (e) {
+      return false;
+    }
+  }
 
   function init() {
     const stored = loadStoredTheme();
     if (stored) currentTheme = stored;
     const primaryInput = document.getElementById('theme-primary-color');
     if (primaryInput) primaryInput.value = rgbToHex(currentTheme.primary || '#28a745');
+
+    isDarkMode = loadDarkModePreference();
+    applyDarkMode(isDarkMode);
+
     attachEvents();
   }
 
@@ -76,6 +138,7 @@ export function createThemeManager() {
     const primaryInput = document.getElementById('theme-primary-color');
     const resetBtn = document.getElementById('reset-theme');
     const presetButtons = document.querySelectorAll('.preset-theme-btn');
+    const darkModeToggle = document.getElementById('dark-mode-toggle');
     if (primaryInput) {
       primaryInput.addEventListener('input', () => {
         currentTheme.primary = primaryInput.value;
@@ -103,6 +166,11 @@ export function createThemeManager() {
             if (primaryInput) primaryInput.value = preset.primary;
           }
         });
+      });
+    }
+    if (darkModeToggle) {
+      darkModeToggle.addEventListener('change', () => {
+        applyDarkMode(darkModeToggle.checked);
       });
     }
   }

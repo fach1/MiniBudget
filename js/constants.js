@@ -4,10 +4,9 @@ export const STORAGE_KEYS = {
 };
 
 export const UI_CLASSES = {
-  SUCCESS: 'btn-success',
-  OUTLINE_SUCCESS: 'btn-outline-success',
-  DANGER: 'text-danger',
-  PRIMARY: 'text-primary',
+  DANGER: 'text-red-600',
+  WARNING: 'text-amber-500',
+  PRIMARY: 'text-emerald-600',
   ACTIVE: 'active'
 };
 

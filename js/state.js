@@ -4,7 +4,8 @@ export const budgetState = {
   items: [],
   currentBudgetName: 'Default Budget',
   currentBudgetId: null,
-  isEditMode: false
+  isEditMode: false,
+  taxRate: 0.08
 };
 
 export function resetState() {
@@ -14,4 +15,5 @@ export function resetState() {
   budgetState.currentBudgetName = 'New Budget';
   budgetState.currentBudgetId = null;
   budgetState.isEditMode = false;
+  budgetState.taxRate = 0.08;
 }

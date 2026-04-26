@@ -1,5 +1,3 @@
-import { UI_CLASSES } from './constants.js';
-
 export function createChartModule(state, canvasElement) {
   let doughnutChart = null;
 

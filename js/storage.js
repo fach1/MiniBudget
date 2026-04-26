@@ -10,11 +10,13 @@ export function createStorageManager(budgetState, uiManager, elements, attachIte
       const qtyEl = li.querySelector('.item-quantity');
       const unitPrice = parseFloat(badge?.getAttribute('data-unit-price'));
       const quantity = parseInt(qtyEl?.textContent || '1', 10) || 1;
+      const isTaxed = li.querySelector('.tax-toggle')?.checked || false;
       return {
         id: li.dataset.id || `item-${Date.now()}-${Math.random().toString(16).slice(2)}`,
         name: nameEl ? nameEl.textContent.trim() : 'Unnamed',
         unitPrice: isNaN(unitPrice) ? 0 : unitPrice,
         quantity,
+        isTaxed,
         createdAt: li.dataset.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
@@ -27,25 +29,37 @@ export function createStorageManager(budgetState, uiManager, elements, attachIte
     itemsArray.forEach(obj => {
       if (!obj || typeof obj !== 'object') return;
       const li = document.createElement('li');
-      li.className = 'list-group-item';
+      li.className = 'p-4 hover:bg-gray-50 transition-colors';
       li.dataset.id = obj.id || `item-${Date.now()}-${Math.random().toString(16).slice(2)}`;
       li.dataset.createdAt = obj.createdAt || new Date().toISOString();
-      const total = ((obj.unitPrice || 0) * (obj.quantity || 1)).toFixed(2);
+      const isTaxed = obj.isTaxed || false;
+      const effectivePrice = isTaxed ? (obj.unitPrice || 0) * (1 + (budgetState.taxRate || 0.08)) : (obj.unitPrice || 0);
+      const total = (effectivePrice * (obj.quantity || 1)).toFixed(2);
       const unitPriceFixed = (obj.unitPrice || 0).toFixed(2);
+      const uniqueId = `tax-${Date.now()}-${Math.random().toString(16).slice(2)}`;
       li.innerHTML = `
-        <div class="d-flex justify-content-between align-items-center w-100 mb-2">
-          <strong class="fs-6">${obj.name || 'Unnamed'}</strong>
-          <span class="text-success fw-bold fs-5 price-display" data-unit-price="${unitPriceFixed}">$${total}</span>
+        <div class="flex justify-between items-center mb-3">
+          <strong class="text-base font-semibold text-gray-800">${obj.name || 'Unnamed'}</strong>
+          <span class="text-lg font-bold text-theme price-display" data-unit-price="${unitPriceFixed}">$${total}</span>
         </div>
-        <div class="d-flex justify-content-between align-items-center w-100">
-          <div class="d-flex align-items-center">
-            <button class="btn btn-outline-secondary btn-sm decrement-btn px-3" aria-label="Decrease quantity">-</button>
-            <span class="mx-3 item-quantity fw-bold">${obj.quantity || 1}</span>
-            <button class="btn btn-outline-secondary btn-sm increment-btn px-3" aria-label="Increase quantity">+</button>
+        <div class="flex justify-between items-center">
+          <div class="inline-flex items-center border border-gray-200 rounded-md bg-white">
+            <button class="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded-l-md transition-colors decrement-btn"><i class="fas fa-minus text-xs pointer-events-none"></i></button>
+            <span class="px-3 font-semibold text-gray-800 border-x border-gray-200 min-w-[2.5rem] text-center item-quantity">${obj.quantity || 1}</span>
+            <button class="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded-r-md transition-colors increment-btn"><i class="fas fa-plus text-xs pointer-events-none"></i></button>
           </div>
-          <div>
-            <button class="btn btn-outline-primary btn-sm edit-btn me-2" aria-label="Edit item" title="Edit"><i class="fas fa-edit"></i></button>
-            <button class="btn btn-danger btn-sm delete-btn" aria-label="Delete item" title="Delete"><i class="fas fa-trash"></i></button>
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2">
+              <label class="text-xs font-semibold text-gray-500" for="${uniqueId}">TAX</label>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" class="sr-only peer tax-toggle" id="${uniqueId}" ${isTaxed ? 'checked' : ''}>
+                <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-theme pointer-events-none"></div>
+              </label>
+            </div>
+            <div class="flex gap-1">
+              <button class="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded transition-colors edit-btn" title="Edit"><i class="fas fa-pen text-sm pointer-events-none"></i></button>
+              <button class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors delete-btn" title="Delete"><i class="fas fa-trash-alt text-sm pointer-events-none"></i></button>
+            </div>
           </div>
         </div>`;
       attachItemEventHandlersRef(li);
@@ -54,10 +68,10 @@ export function createStorageManager(budgetState, uiManager, elements, attachIte
   }
   function saveToLocalStorage(savedBudgets) {
     try {
-      const payload = {
+const payload = {
         totalBudget: budgetState.totalBudget,
         currentSpending: budgetState.currentSpending,
-        // New normalized format
+        taxRate: budgetState.taxRate,
         items: serializeItems(),
         currentBudgetName: budgetState.currentBudgetName,
         // Persist active budget editing context (added after normalization step)
@@ -76,6 +90,7 @@ export function createStorageManager(budgetState, uiManager, elements, attachIte
     const data = JSON.parse(savedData);
     budgetState.totalBudget = data.totalBudget || 0;
     budgetState.currentSpending = data.currentSpending || 0;
+    budgetState.taxRate = data.taxRate || 0.08;
     budgetState.currentBudgetName = data.currentBudgetName || 'Default Budget';
     // Restore edit context (backward compatible: fields may not exist in older payloads)
     budgetState.currentBudgetId = data.currentBudgetId || null;
@@ -97,10 +112,35 @@ export function createStorageManager(budgetState, uiManager, elements, attachIte
 
   // Legacy loader (outerHTML strings)
   function loadLegacyBudgetItems(items) {
-    items.forEach(itemHTML => {
-      const tempDiv = document.createElement('div'); tempDiv.innerHTML = itemHTML; const listItem = tempDiv.firstChild;
-      attachItemEventHandlersRef(listItem); elements.budgetList.appendChild(listItem);
-    });
+    const normalizedItems = items.map(itemHTML => {
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = itemHTML;
+      const listItem = tempDiv.firstElementChild;
+      if (!listItem) return null;
+
+      const nameElement = listItem.querySelector('strong');
+      const badgeElement = listItem.querySelector('.price-display');
+      const quantityElement = listItem.querySelector('.item-quantity');
+      const taxToggle = listItem.querySelector('.tax-toggle');
+
+      const quantity = parseInt(quantityElement?.textContent || '1', 10) || 1;
+      const rawTotal = parseFloat((badgeElement?.textContent || '$0').replace('$', '').trim());
+      const parsedUnitPrice = parseFloat(badgeElement?.getAttribute('data-unit-price'));
+      const unitPrice = !isNaN(parsedUnitPrice)
+        ? parsedUnitPrice
+        : (!isNaN(rawTotal) && quantity > 0 ? rawTotal / quantity : 0);
+
+      return {
+        id: listItem.dataset.id || `legacy-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        name: nameElement ? nameElement.textContent.trim() : 'Unnamed',
+        unitPrice,
+        quantity,
+        isTaxed: !!taxToggle?.checked,
+        createdAt: listItem.dataset.createdAt || new Date().toISOString()
+      };
+    }).filter(Boolean);
+
+    deserializeItems(normalizedItems);
   }
 
   function loadSavedBudgets(intoArray) {

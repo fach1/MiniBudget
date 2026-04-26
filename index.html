@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="MiniBudget - A simple budget tracking application">
     <title>Mini Budget</title>
-    <!-- External CSS -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.3.0/mdb.min.css" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Application CSS -->
@@ -20,121 +20,158 @@
     <link rel="apple-touch-icon" sizes="180x180" href="MiniBudget.png">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#28a745">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Poppins', 'sans-serif'] },
+                    colors: {
+                        theme: 'var(--color-primary, #28a745)',
+                        themeHover: 'var(--color-primary-hover, #218838)',
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body>
+<body class="bg-gray-50 text-gray-800 font-sans pb-20">
     <!-- App Header -->
-    <header class="bg-success text-white text-center py-3">
-        <div class="container position-relative">
-            <h1 class="mb-0">MINI BUDGET</h1>
-
-            <button id="menu-button" class="btn btn-success position-absolute end-0 top-50 translate-middle-y" 
-                    aria-label="Open menu" title="Open saved budgets menu">
-                <i class="fas fa-bars fa-lg" aria-hidden="true"></i>
-            </button>
-        
-        </div>
+    <header class="bg-theme text-white text-center py-4 relative shadow-md z-10">
+        <h1 class="m-0 text-2xl font-bold tracking-wide">MINI BUDGET</h1>
+        <button id="menu-button" class="absolute right-4 top-1/2 -translate-y-1/2 p-2.5 rounded-lg text-white bg-white/20 hover:bg-white/30 active:bg-white/40 shadow-sm hover:shadow-md active:shadow-sm backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-white/80 focus:ring-offset-2 focus:ring-offset-emerald-600 transition-all duration-200" aria-label="Open menu">
+            <i class="fas fa-bars fa-lg" aria-hidden="true"></i>
+        </button>
     </header>
 
     <!-- Sidebar Navigation -->
-    <aside id="sidebar" class="sidebar" aria-label="Saved budgets menu">
-        <div class="sidebar-header">
-            <h5 class="mb-0">Saved Budgets</h5>
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-40 hidden transition-opacity" aria-hidden="true"></div>
+    <aside id="sidebar" class="fixed top-0 right-0 w-64 h-full bg-[var(--sidebar-bg)] text-[color:var(--sidebar-text)] z-50 transform translate-x-full transition-transform duration-300 shadow-2xl flex flex-col" aria-label="Saved budgets menu">
+        <div class="flex justify-between items-center p-4 border-b border-[color:var(--sidebar-border)]">
+            <h5 class="m-0 font-bold text-lg">Saved Budgets</h5>
             <div>
-                <button id="new-budget-btn" class="btn btn-sm btn-outline-light me-2" aria-label="Create new budget">
-                    <i class="fas fa-plus" aria-hidden="true"></i>
-                </button>
-                <button id="close-sidebar" class="btn btn-sm btn-outline-light me-2" aria-label="Close menu">
-                    <i class="fas fa-times" aria-hidden="true"></i>
+                <button id="close-sidebar" class="p-2 text-[color:var(--sidebar-text)] hover:bg-[var(--sidebar-control-bg)] hover:text-red-300 active:bg-[var(--sidebar-control-hover-bg)] focus:outline-none focus:ring-2 focus:ring-white/25 rounded transition-all duration-200" aria-label="Close menu">
+                    <i class="fas fa-times"></i>
                 </button>
             </div>
         </div>
-        <nav class="sidebar-content d-flex flex-column h-100">
-            <ul class="list-group list-group-flush flex-grow-1" aria-label="Saved budget list">
-                <!-- Saved budgets will be dynamically added here -->
+        <nav class="flex-grow overflow-y-auto flex flex-col">
+            <ul id="saved-budgets-list" class="divide-y divide-[color:var(--sidebar-border)]" aria-label="Saved budget list">
+                <!-- Dynamic -->
             </ul>
-            <div class="sidebar-footer mt-auto">
-                <div class="px-3 pt-3 border-top border-white border-opacity-25">
-                    <h6 class="text-white mb-2">Theme</h6>
-                    <div class="mb-3">
-                        <label for="theme-primary-color" class="form-label text-white small mb-1">Primary Color</label>
-                        <input type="color" id="theme-primary-color" class="form-control form-control-color" value="#28a745" aria-label="Primary theme color picker" />
-                    </div>
-                    <div class="d-flex gap-2 mb-3 flex-wrap">
-                        <button type="button" class="btn btn-sm btn-outline-light preset-theme-btn" data-preset="green">Green</button>
-                        <button type="button" class="btn btn-sm btn-outline-light preset-theme-btn" data-preset="blue">Blue</button>
-                        <button type="button" class="btn btn-sm btn-outline-light preset-theme-btn" data-preset="purple">Purple</button>
-                        <button type="button" class="btn btn-sm btn-outline-light preset-theme-btn" data-preset="dark">Dark</button>
-                    </div>
-                    <button type="button" id="reset-theme" class="btn btn-sm btn-outline-light w-100 mb-3">Reset Theme</button>
-                    <div class="d-flex flex-column gap-2 pb-3">
-                        <button id="export-backup" class="btn btn-sm btn-outline-light" aria-label="Export backup">
-                            <i class="fas fa-download me-2" aria-hidden="true"></i>Export
-                        </button>
-                        <button id="import-backup" class="btn btn-sm btn-outline-light" aria-label="Import backup">
-                            <i class="fas fa-upload me-2" aria-hidden="true"></i>Import
-                        </button>
-                        <input type="file" id="import-backup-file" accept="application/json" style="display:none" aria-hidden="true" />
-                    </div>
+            <div class="p-4 border-t border-[color:var(--sidebar-border)]">
+                <div class="flex gap-2">
+                    <button id="new-budget-btn" class="flex-1 py-2 text-sm font-medium bg-[color:var(--sidebar-control-bg)] text-[color:var(--sidebar-text)] border border-[color:var(--sidebar-border)] rounded hover:bg-[color:var(--sidebar-control-hover-bg)] active:brightness-95 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-white/25 transition-all duration-200" aria-label="Create new budget">
+                        <i class="fas fa-plus mr-2" aria-hidden="true"></i> New Budget
+                    </button>
+                    <button id="settings-btn" class="p-2 text-[color:var(--sidebar-text)] bg-[color:var(--sidebar-control-bg)] border border-[color:var(--sidebar-border)] rounded hover:bg-[color:var(--sidebar-control-hover-bg)] active:brightness-95 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-white/25 transition-all duration-200" aria-label="Settings">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
+                <div class="grid grid-cols-2 gap-2 mt-2">
+                    <button id="export-backup" class="w-full py-2 text-sm font-medium bg-[color:var(--sidebar-control-bg)] text-[color:var(--sidebar-text)] rounded border border-[color:var(--sidebar-border)] hover:bg-[color:var(--sidebar-control-hover-bg)] active:brightness-95 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-white/25 transition-all duration-200">
+                        <i class="fas fa-download me-2"></i> Export
+                    </button>
+                    <button id="import-backup" class="w-full py-2 text-sm font-medium bg-[color:var(--sidebar-control-bg)] text-[color:var(--sidebar-text)] rounded border border-[color:var(--sidebar-border)] hover:bg-[color:var(--sidebar-control-hover-bg)] active:brightness-95 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-white/25 transition-all duration-200">
+                        <i class="fas fa-upload me-2"></i> Import
+                    </button>
+                    <input type="file" id="import-backup-file" accept="application/json" class="hidden" aria-hidden="true" />
                 </div>
             </div>
         </nav>
+
+        <!-- Settings Panel -->
+        <div id="settings-panel" class="fixed top-0 right-0 w-64 h-full bg-[color:var(--sidebar-bg)] text-[color:var(--sidebar-text)] z-50 transform translate-x-full transition-transform duration-300 shadow-2xl flex flex-col hidden" aria-label="Settings">
+            <div class="flex justify-between items-center p-4 border-b border-[color:var(--sidebar-border)]">
+                <button id="back-to-sidebar" class="flex items-center text-sm text-[color:var(--sidebar-text)] hover:text-white transition-colors" aria-label="Back to saved budgets">
+                    <i class="fas fa-chevron-left mr-2 text-xs"></i>
+                    <span class="text-sm font-medium">Saved Budgets</span>
+                </button>
+            </div>
+            <div class="p-4">
+                <label for="tax-rate-input" class="block text-xs font-medium text-[color:var(--sidebar-text)] mb-2">Tax Percentage (%)</label>
+                <input type="number" id="tax-rate-input" step="0.01" min="0" max="100" class="block w-full px-3 py-2 text-sm border border-[color:var(--sidebar-border)] rounded bg-[color:var(--sidebar-control-bg)] text-[color:var(--sidebar-text)] focus:outline-none focus:ring-2 focus:ring-white/25" placeholder="e.g. 8" />
+                <p class="text-xs text-[color:var(--sidebar-text)] opacity-70 mt-2">This percentage will be added to item prices when the tax toggle is enabled.</p>
+            </div>
+            <div class="p-4 border-t border-[color:var(--sidebar-border)]">
+                <h6 class="font-bold mb-3 text-[color:var(--sidebar-text)]">Theme</h6>
+                <div class="mb-3">
+                    <label for="theme-primary-color" class="block text-xs font-medium text-[color:var(--sidebar-text)] mb-1">Primary Color</label>
+                    <input type="color" id="theme-primary-color" class="w-full h-8 rounded cursor-pointer border border-[color:var(--sidebar-border)] bg-[color:var(--sidebar-control-bg)]" value="#28a745" />
+                </div>
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <button type="button" class="preset-theme-btn px-3 py-1 text-xs rounded border border-[color:var(--sidebar-border)] bg-[color:var(--sidebar-control-bg)] text-[color:var(--sidebar-text)] hover:bg-[color:var(--sidebar-control-hover-bg)] active:brightness-95 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-white/25 transition-all duration-200" data-preset="green">Green</button>
+                    <button type="button" class="preset-theme-btn px-3 py-1 text-xs rounded border border-[color:var(--sidebar-border)] bg-[color:var(--sidebar-control-bg)] text-[color:var(--sidebar-text)] hover:bg-[color:var(--sidebar-control-hover-bg)] active:brightness-95 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-white/25 transition-all duration-200" data-preset="blue">Blue</button>
+                    <button type="button" class="preset-theme-btn px-3 py-1 text-xs rounded border border-[color:var(--sidebar-border)] bg-[color:var(--sidebar-control-bg)] text-[color:var(--sidebar-text)] hover:bg-[color:var(--sidebar-control-hover-bg)] active:brightness-95 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-white/25 transition-all duration-200" data-preset="purple">Purple</button>
+                    <button type="button" class="preset-theme-btn px-3 py-1 text-xs rounded border border-[color:var(--sidebar-border)] bg-[color:var(--sidebar-control-bg)] text-[color:var(--sidebar-text)] hover:bg-[color:var(--sidebar-control-hover-bg)] active:brightness-95 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-white/25 transition-all duration-200" data-preset="dark">Dark</button>
+                </div>
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-sm font-medium text-[color:var(--sidebar-text)]">Dark Mode</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="dark-mode-toggle" class="sr-only peer" autocomplete="off">
+                        <div class="w-9 h-5 bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-white/60 shadow-inner"></div>
+                    </label>
+                </div>
+                <button type="button" id="reset-theme" class="w-full py-2 text-sm font-medium bg-[color:var(--sidebar-control-bg)] text-[color:var(--sidebar-text)] border border-[color:var(--sidebar-border)] rounded hover:bg-[color:var(--sidebar-control-hover-bg)] active:brightness-95 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-white/25 transition-all duration-200">Reset Theme</button>
+            </div>
+        </div>
+        </div>
     </aside>
-    
-    <!-- Sidebar Overlay -->
-    <div id="sidebar-overlay" aria-hidden="true"></div>
 
     <!-- Main Content -->
-    <main class="container my-4">
+    <main class="max-w-xl mx-auto p-4 space-y-6">
         <!-- Budget Overview Section -->
-        <section id="budget-overview" class="mb-4 text-center">
-            <h2 class="mb-3">Budget Overview</h2>
+        <section id="budget-overview" class="text-center bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <h2 class="text-xl font-bold mb-4 text-gray-800">Budget Overview</h2>
             
-            <!-- Chart Container -->
-            <div class="d-flex flex-column align-items-center">
-                <div class="position-relative">
-                    <canvas id="budget-chart" aria-label="Budget visualization chart showing expenses and remaining budget"></canvas>
-                    <div id="total-budget-container" class="position-absolute top-50 start-50 translate-middle text-center">
-                        <span id="total-budget" class="fw-bold fs-4">$0</span>
+            <div class="flex flex-col items-center">
+                <div class="relative w-full max-w-[200px] aspect-square">
+                    <canvas id="budget-chart"></canvas>
+                    <div id="total-budget-container" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none">
+                        <span id="total-budget" class="font-bold text-2xl text-gray-800">$0</span>
                     </div>
                 </div>
             </div>
             
-            <!-- Budget Input -->
-            <div class="mt-3">
-                <div class="form-outline w-100 w-md-50 mx-auto">
-                    <input type="number" id="total-budget-input" class="form-control" 
-                           step="0.01" min="0" inputmode="decimal" placeholder=" " aria-label="Total budget amount" />
-                    <label class="form-label" for="total-budget-input">Total Budget</label>
+            <div class="mt-6">
+                <div class="w-full max-w-xs mx-auto text-left">
+                    <label for="total-budget-input" class="block text-sm font-medium text-gray-700 mb-1">Total Budget</label>
+                    <input type="number" id="total-budget-input" step="0.01" min="0" inputmode="decimal" class="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-theme focus:border-theme transition-colors shadow-sm" placeholder="e.g. 1000.00" />
                 </div>
             </div>
             
-            <!-- Remaining Budget Display -->
-            <div class="mt-3">
-                <h4>Remaining Budget: <span id="remaining-budget" class="text-primary">$0</span></h4>
+            <div class="mt-6">
+                <div class="w-full max-w-xs mx-auto grid grid-cols-2 gap-2 text-left">
+                    <div class="rounded-xl border border-gray-100 bg-gray-50 px-4 py-2.5">
+                        <span class="block text-[10px] font-semibold uppercase tracking-wide text-gray-500 mb-0.5">Remaining</span>
+                        <span id="remaining-budget" class="block text-base font-bold text-theme">$0</span>
+                    </div>
+                    <div class="rounded-xl border border-gray-100 bg-gray-50 px-4 py-2.5 text-right">
+                        <span class="block text-[10px] font-semibold uppercase tracking-wide text-gray-500 mb-0.5">Spent</span>
+                        <span id="spent-budget" class="block text-base font-bold text-rose-600">$0</span>
+                    </div>
+                </div>
             </div>
         </section>
 
         <!-- Add Item Form Section -->
-        <section id="budget-form" class="mb-4">
-            <h4 class="mt-3">Add Item</h4>
-            <form class="row g-3" aria-label="Add budget item form">
-                <div class="col-8">
-                    <div class="form-outline">
-                        <input type="text" id="item-name" name="item-name" class="form-control" 
-                               placeholder=" " required aria-label="Item name" />
-                        <label class="form-label" for="item-name">Item Name</label>
+        <section id="budget-form" class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+            <h4 class="text-lg font-bold mb-4 text-gray-800 border-b pb-2">Add Item</h4>
+            <form class="space-y-3">
+                <div class="flex gap-3">
+                    <div class="flex-grow">
+                        <label for="item-name" class="block text-sm font-medium text-gray-700 mb-1">Item Name</label>
+                        <input type="text" id="item-name" name="item-name" required class="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-theme focus:border-theme transition-colors shadow-sm" placeholder="e.g. Groceries" />
+                    </div>
+                    <div class="w-32">
+                        <label for="amount" class="block text-sm font-medium text-gray-700 mb-1">Price</label>
+                        <input type="number" id="amount" name="amount" step="0.01" min="0.01" inputmode="decimal" required class="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-theme focus:border-theme transition-colors shadow-sm" placeholder="0.00" />
                     </div>
                 </div>
-                <div class="col-4">
-                    <div class="form-outline">
-                        <input type="number" id="amount" name="amount" class="form-control" 
-                               step="0.01" min="0.01" inputmode="decimal" placeholder=" " required aria-label="Item price" />
-                        <label class="form-label" for="amount">Price</label>
-                    </div>
-                </div>
-                <div class="col-12">
-                    <button type="submit" class="btn btn-theme w-100 ripple-surface">
-                        <i class="fas fa-plus-circle" aria-hidden="true"></i> Add Item
+                <div>
+                    <button type="submit" class="w-full bg-theme hover:bg-themeHover active:brightness-95 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:shadow-lg active:shadow-sm focus:outline-none focus:ring-2 focus:ring-theme focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 ease-in-out">
+                        <i class="fas fa-plus-circle mr-2"></i> Add Item
                     </button>
                 </div>
             </form>
@@ -142,177 +179,200 @@
 
         <!-- Budget Items List Section -->
         <section id="budget-list">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h4 class="mb-3">Items List</h4>
-                <div class="d-flex gap-2">
-                    <button id="save-budget" class="btn btn-outline-success btn-sm action-btn" 
-                            data-mdb-toggle="modal" data-mdb-target="#saveBudgetModal">
-                        <i class="fas fa-save" aria-hidden="true"></i> Save
+            <div class="flex justify-between items-center mb-4">
+                <h4 class="text-lg font-bold text-gray-800">Items List</h4>
+                <div class="flex gap-2">
+                    <button id="save-budget" class="px-3 py-1.5 text-sm font-semibold text-theme border-2 border-theme bg-white hover:bg-theme hover:text-white active:brightness-95 rounded-lg shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-theme transition-all duration-200" onclick="openModal('saveBudgetModal')">
+                        <i class="fas fa-save mr-1"></i> Save
                     </button>
-                    <button id="clear-items" class="btn btn-outline-danger btn-sm action-btn" 
-                            data-mdb-toggle="modal" data-mdb-target="#confirmClearModal">
-                        <i class="fas fa-trash" aria-hidden="true"></i> Clear
+                    <button id="clear-items" class="px-3 py-1.5 text-sm font-semibold text-red-600 border-2 border-red-600 bg-white hover:bg-red-600 hover:text-white active:bg-red-700 active:border-red-700 rounded-lg shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-500 transition-all duration-200" onclick="openModal('confirmClearModal')">
+                        <i class="fas fa-trash-alt mr-1" aria-hidden="true"></i> Clear
                     </button>
                 </div>
             </div>
             
-            <!-- Items Container -->
-            <div class="card shadow-2-strong">
-                <ul class="list-group list-group-flush" aria-label="Budget items list">
-                    <!-- Budget items will be dynamically added here -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <ul id="items-list-container" class="divide-y divide-gray-100">
+                    <!-- Dynamic -->
                 </ul>
-                <div id="empty-list" class="card-body text-center py-4">
-                    <p class="text-muted mb-0">
-                        <i class="fas fa-info-circle" aria-hidden="true"></i> No items added yet
-                    </p>
+                <div id="empty-list" class="text-center py-8 text-gray-400">
+                    <i class="fas fa-info-circle text-xl mb-2 block"></i>
+                    <p class="mb-0 text-sm">No items added yet</p>
                 </div>
             </div>
         </section>
     </main>
 
-    <!-- Modals -->
-    <!-- Clear Items Confirmation Modal -->
-    <div class="modal fade" id="confirmClearModal" tabindex="-1" 
-         aria-labelledby="confirmClearModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title" id="confirmClearModalLabel">Confirm Clear All</h5>
-                    <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+    <!-- Native Tailwind Modals Container -->
+    <div id="modal-container" class="fixed inset-0 z-50 hidden">
+        <!-- Backdrop -->
+        <div class="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" onclick="closeActiveModal()"></div>
+        
+        <div class="fixed inset-0 flex items-center justify-center p-4 pointer-events-none">
+            <!-- Modals Content wrappers -->
+            
+            <!-- Clear Items -->
+            <div id="confirmClearModal" class="custom-modal hidden bg-white rounded-xl shadow-2xl w-full max-w-sm pointer-events-auto transform scale-95 transition-transform duration-200">
+                <div class="bg-red-500 text-white px-4 py-3 rounded-t-xl flex justify-between items-center">
+                    <h5 class="font-bold">Confirm Clear All</h5>
+                    <button onclick="closeActiveModal()" class="text-white hover:text-gray-200"><i class="fas fa-times"></i></button>
                 </div>
-                <div class="modal-body">
-                    Are you sure you want to delete all items? This action cannot be undone.
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-mdb-dismiss="modal">Cancel</button>
-                    <button type="button" id="confirm-clear-btn" class="btn btn-danger">Clear All</button>
+                <div class="p-4 text-gray-700">Are you sure you want to delete all items? This action cannot be undone.</div>
+                <div class="p-4 border-t border-gray-100 flex justify-end gap-2 bg-gray-50 rounded-b-xl">
+                    <button onclick="closeActiveModal()" class="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 rounded shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 font-medium transition-all duration-200">Cancel</button>
+                    <button id="confirm-clear-btn" class="px-4 py-2 text-white bg-red-600 hover:bg-red-700 active:bg-red-800 rounded shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-500 font-medium transition-all duration-200">Clear All</button>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- New Budget Confirmation Modal -->
-    <div class="modal fade" id="confirmNewBudgetModal" tabindex="-1" aria-labelledby="confirmNewBudgetModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="confirmNewBudgetModalLabel">Create New Budget</h5>
-                    <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+            <!-- New Budget -->
+            <div id="confirmNewBudgetModal" class="custom-modal hidden bg-white rounded-xl shadow-2xl w-full max-w-sm pointer-events-auto transform scale-95 transition-transform duration-200">
+                <div class="bg-blue-500 text-white px-4 py-3 rounded-t-xl flex justify-between items-center">
+                    <h5 class="font-bold">Create New Budget</h5>
+                    <button onclick="closeActiveModal()" class="text-white hover:text-gray-200"><i class="fas fa-times"></i></button>
                 </div>
-                <div class="modal-body">
-                    A new budget will be created and current items and totals will be cleared. Continue?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-mdb-dismiss="modal">No</button>
-                    <button type="button" id="confirm-new-budget-btn" class="btn btn-primary">Yes, Create New Budget</button>
+                <div class="p-4 text-gray-700">A new budget will be created and current items and totals will be cleared. Continue?</div>
+                <div class="p-4 border-t border-gray-100 flex justify-end gap-2 bg-gray-50 rounded-b-xl">
+                    <button onclick="closeActiveModal()" class="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 rounded shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 font-medium transition-all duration-200">No</button>
+                    <button id="confirm-new-budget-btn" class="px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium transition-all duration-200">Yes, Create</button>
                 </div>
             </div>
-        </div>
-    </div>
-    
-    <!-- Save Budget Modal -->
-    <div class="modal fade" id="saveBudgetModal" tabindex="-1" 
-         aria-labelledby="saveBudgetModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title" id="saveBudgetModalLabel">Save Budget</h5>
-                    <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+
+            <!-- Save Budget -->
+            <div id="saveBudgetModal" class="custom-modal hidden bg-white rounded-xl shadow-2xl w-full max-w-sm pointer-events-auto transform scale-95 transition-transform duration-200">
+                <div class="bg-theme text-white px-4 py-3 rounded-t-xl flex justify-between items-center">
+                    <h5 class="font-bold">Save Budget</h5>
+                    <button onclick="closeActiveModal()" class="text-white hover:text-gray-200"><i class="fas fa-times"></i></button>
                 </div>
-                <div class="modal-body">
-                    <div class="form-outline mb-3">
-                        <input type="text" id="budget-name-input" class="form-control" 
-                               placeholder=" " required aria-label="Budget name" />
-                        <label class="form-label" for="budget-name-input">Budget Name</label>
+                <div class="p-5">
+                    <div>
+                        <label for="budget-name-input" class="block text-sm font-medium text-gray-700 mb-1">Budget Name</label>
+                        <input type="text" id="budget-name-input" class="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-theme focus:border-theme transition-colors shadow-sm" placeholder="My new budget" required />
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-mdb-dismiss="modal">Cancel</button>
-                    <button type="button" id="confirm-save-btn" class="btn btn-success">Save</button>
+                <div class="p-4 border-t border-gray-100 flex justify-end gap-2 bg-gray-50 rounded-b-xl">
+                    <button onclick="closeActiveModal()" class="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 rounded shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 font-medium transition-all duration-200">Cancel</button>
+                    <button id="confirm-save-btn" class="px-4 py-2 text-white bg-theme hover:bg-themeHover active:brightness-95 rounded shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-theme font-medium transition-all duration-200">Save</button>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Edit Item Modal -->
-    <div class="modal fade" id="editItemModal" tabindex="-1" aria-labelledby="editItemModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="editItemModalLabel">Edit Item</h5>
-                    <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+            <!-- Edit Item -->
+            <div id="editItemModal" class="custom-modal hidden bg-white rounded-xl shadow-2xl w-full max-w-sm pointer-events-auto transform scale-95 transition-transform duration-200">
+                <div class="bg-blue-500 text-white px-4 py-3 rounded-t-xl flex justify-between items-center">
+                    <h5 class="font-bold">Edit Item</h5>
+                    <button onclick="closeActiveModal()" class="text-white hover:text-gray-200"><i class="fas fa-times"></i></button>
                 </div>
-                <div class="modal-body">
-                    <form id="edit-item-form" aria-label="Edit budget item form">
+                <div class="p-5">
+                    <form id="edit-item-form" class="space-y-4">
                         <input type="hidden" id="edit-item-index" />
-                        <div class="form-outline mb-3">
-                            <input type="text" id="edit-item-name" class="form-control" placeholder=" " required aria-label="Edit item name" />
-                            <label class="form-label" for="edit-item-name">Item Name</label>
+                        <div>
+                            <label for="edit-item-name" class="block text-sm font-medium text-gray-700 mb-1">Item Name</label>
+                            <input type="text" id="edit-item-name" class="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors shadow-sm" placeholder="Item Name" required />
                         </div>
-                        <div class="form-outline mb-3">
-                            <input type="number" id="edit-item-price" class="form-control" step="0.01" min="0.01" inputmode="decimal" placeholder=" " required aria-label="Edit unit price" />
-                            <label class="form-label" for="edit-item-price">Unit Price</label>
-                        </div>
-                        <div class="form-outline mb-3">
-                            <input type="number" id="edit-item-quantity" class="form-control" step="1" min="1" placeholder=" " required aria-label="Edit quantity" />
-                            <label class="form-label" for="edit-item-quantity">Quantity</label>
+                        <div class="flex gap-3">
+                            <div class="w-1/2">
+                                <label for="edit-item-price" class="block text-sm font-medium text-gray-700 mb-1">Price</label>
+                                <input type="number" id="edit-item-price" step="0.01" min="0.01" inputmode="decimal" class="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors shadow-sm" placeholder="0.00" required />
+                            </div>
+                            <div class="w-1/2">
+                                <label for="edit-item-quantity" class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                                <input type="number" id="edit-item-quantity" step="1" min="1" class="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors shadow-sm" placeholder="1" required />
+                            </div>
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-mdb-dismiss="modal">Cancel</button>
-                    <button type="button" id="confirm-edit-item" class="btn btn-primary">Save Changes</button>
+                <div class="p-4 border-t border-gray-100 flex justify-end gap-2 bg-gray-50 rounded-b-xl">
+                    <button onclick="closeActiveModal()" class="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 rounded shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 font-medium transition-all duration-200">Cancel</button>
+                    <button id="confirm-edit-item" class="px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium transition-all duration-200">Save Changes</button>
+                </div>
+            </div>
+
+            <!-- Delete Budget -->
+            <div id="confirmDeleteBudgetModal" class="custom-modal hidden bg-white rounded-xl shadow-2xl w-full max-w-sm pointer-events-auto transform scale-95 transition-transform duration-200">
+                <div class="bg-red-500 text-white px-4 py-3 rounded-t-xl flex justify-between items-center">
+                    <h5 class="font-bold"><i class="fas fa-exclamation-triangle mr-2"></i>Delete Budget</h5>
+                    <button onclick="closeActiveModal()" class="text-white hover:text-gray-200"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="p-4 text-gray-700">Are you sure you want to delete the budget <strong id="delete-budget-name" class="text-black"></strong>? This cannot be undone.</div>
+                <div class="p-4 border-t border-gray-100 flex justify-end gap-2 bg-gray-50 rounded-b-xl">
+                    <button onclick="closeActiveModal()" class="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 rounded shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 font-medium transition-all duration-200">Cancel</button>
+                    <button id="confirm-delete-budget-btn" class="px-4 py-2 text-white bg-red-600 hover:bg-red-700 active:bg-red-800 rounded shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-500 font-medium transition-all duration-200">Delete</button>
+                </div>
+            </div>
+
+            <!-- Delete Item -->
+            <div id="confirmDeleteItemModal" class="custom-modal hidden bg-white rounded-xl shadow-2xl w-full max-w-sm pointer-events-auto transform scale-95 transition-transform duration-200">
+                <div class="bg-red-500 text-white px-4 py-3 rounded-t-xl flex justify-between items-center">
+                    <h5 class="font-bold"><i class="fas fa-trash-alt mr-2"></i>Delete Item</h5>
+                    <button onclick="closeActiveModal()" class="text-white hover:text-gray-200"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="p-4 text-gray-700">Delete item <strong id="delete-item-name" class="text-black"></strong>? This cannot be undone.</div>
+                <div class="p-4 border-t border-gray-100 flex justify-end gap-2 bg-gray-50 rounded-b-xl">
+                    <button onclick="closeActiveModal()" class="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 rounded shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-400 font-medium transition-all duration-200">Cancel</button>
+                    <button id="confirm-delete-item-btn" class="px-4 py-2 text-white bg-red-600 hover:bg-red-700 active:bg-red-800 rounded shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-500 font-medium transition-all duration-200">Delete</button>
                 </div>
             </div>
         </div>
     </div>
     
-    <!-- Delete Saved Budget Confirmation Modal -->
-    <div class="modal fade" id="confirmDeleteBudgetModal" tabindex="-1" aria-labelledby="confirmDeleteBudgetModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-danger text-white py-2">
-                    <h5 class="modal-title" id="confirmDeleteBudgetModalLabel"><i class="fas fa-exclamation-triangle me-2"></i>Delete Budget</h5>
-                    <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p class="mb-0">Are you sure you want to delete the budget <strong id="delete-budget-name"></strong>? This action cannot be undone.</p>
-                </div>
-                <div class="modal-footer py-2">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-mdb-dismiss="modal">Cancel</button>
-                    <button type="button" id="confirm-delete-budget-btn" class="btn btn-danger btn-sm">
-                        <i class="fas fa-trash me-2"></i>Delete
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Delete Item Confirmation Modal -->
-    <div class="modal fade" id="confirmDeleteItemModal" tabindex="-1" aria-labelledby="confirmDeleteItemModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-danger text-white py-2">
-                    <h5 class="modal-title" id="confirmDeleteItemModalLabel"><i class="fas fa-trash-alt me-2"></i>Delete Item</h5>
-                    <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p class="mb-0">Delete item <strong id="delete-item-name"></strong>? This cannot be undone.</p>
-                </div>
-                <div class="modal-footer py-2">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-mdb-dismiss="modal">Cancel</button>
-                    <button type="button" id="confirm-delete-item-btn" class="btn btn-danger btn-sm">
-                        <i class="fas fa-trash me-2"></i>Delete
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
+    <script>
+        // Native Tailwind Modal Logic
+        let activeModal = null;
+        function openModal(id) {
+            document.getElementById('modal-container').classList.remove('hidden');
+            const m = document.getElementById(id);
+            m.classList.remove('hidden');
+            setTimeout(() => { m.classList.remove('scale-95'); m.classList.add('scale-100'); }, 10);
+            activeModal = m;
+        }
+        function closeActiveModal() {
+            if(!activeModal) return;
+            activeModal.classList.remove('scale-100');
+            activeModal.classList.add('scale-95');
+            setTimeout(() => {
+                activeModal.classList.add('hidden');
+                document.getElementById('modal-container').classList.add('hidden');
+                activeModal = null;
+            }, 200);
+        }
+        
+        // Export modal logic so JS modules can trigger them
+        window.openModal = openModal;
+        window.closeModal = closeActiveModal;
+    </script>
+
+    <!-- Dark Mode CSS overrides -->
+    <style>
+        html.dark { --page-bg: #000000; --card-bg: #181818; --card-border: #3a3a3a; --text-primary: #e5e5e5; --text-secondary: #b3b3b3; --text-muted: #8a8a8a; --input-bg: #222222; --input-border: #404040; --hover-bg: #282828; --modal-overlay: rgba(0,0,0,0.85); }
+        html.dark body { background-color: var(--page-bg) !important; }
+        html.dark .bg-white { background-color: var(--card-bg) !important; }
+        html.dark .bg-gray-100 { background-color: var(--hover-bg) !important; }
+        html.dark .bg-gray-200 { background-color: #333333 !important; }
+        html.dark .text-gray-800, html.dark .text-gray-700, html.dark .text-gray-600 { color: var(--text-primary) !important; }
+        html.dark .text-gray-500 { color: var(--text-secondary) !important; }
+        html.dark .text-gray-400 { color: var(--text-muted) !important; }
+        html.dark .border-gray-100, html.dark .border-gray-200 { border-color: var(--card-border) !important; }
+        html.dark .border-gray-300 { border-color: var(--input-border) !important; }
+        html.dark input, html.dark select, html.dark textarea { background-color: var(--input-bg) !important; border-color: var(--input-border) !important; color: var(--text-primary) !important; }
+        html.dark #total-budget, html.dark #total-budget-container span { color: var(--text-primary) !important; }
+        html.dark .hover\:bg-gray-50:hover { background-color: var(--hover-bg) !important; }
+        html.dark .hover\:bg-gray-100:hover { background-color: var(--hover-bg) !important; }
+        html.dark .hover\:bg-red-50:hover { background-color: rgba(239,68,68,0.15) !important; }
+        html.dark .hover\:bg-blue-50:hover { background-color: rgba(59,130,246,0.15) !important; }
+        html.dark .hover\:bg-gray-300:hover { background-color: #404040 !important; }
+        html.dark .text-theme { color: var(--color-primary-light) !important; }
+        html.dark .border-theme { border-color: var(--color-primary-light) !important; }
+        html.dark .custom-modal { background-color: var(--card-bg) !important; }
+        html.dark .custom-modal .text-gray-700 { color: var(--text-primary) !important; }
+        html.dark canvas#budget-chart { filter: brightness(0.9); }
+        html.dark input::placeholder { color: #94a3b8; }
+        html.dark #budget-overview .bg-gray-50 { background-color: #2a2a2a !important; }
+        html.dark .custom-modal .bg-gray-50 { background-color: #2a2a2a !important; }
+        html.dark .custom-modal .border-t { border-color: var(--card-border) !important; }
+        html.dark #budget-list .divide-y > * { border-color: var(--card-border) !important; }
+    </style>
+
     <!-- External scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.3.0/mdb.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Migrated to ES Modules -->
     <script type="module" src="./js/main.js"></script>
 </body>
 </html>

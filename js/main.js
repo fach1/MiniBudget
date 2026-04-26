@@ -1,4 +1,3 @@
-import { STORAGE_KEYS, UI_CLASSES } from './constants.js';
 import { budgetState } from './state.js';
 import { createChartModule } from './chart.js';
 import { createUIManager } from './ui.js';
@@ -26,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
       totalBudgetDisplay: '#total-budget',
       budgetChartCanvas: '#budget-chart',
       remainingBudgetDisplay: '#remaining-budget',
+      spentBudgetDisplay: '#spent-budget',
       itemNameInput: '#item-name',
       itemAmountInput: '#amount',
       menuButton: '#menu-button',
@@ -35,20 +35,25 @@ document.addEventListener('DOMContentLoaded', () => {
       saveBudgetBtn: '#save-budget',
       confirmSaveBtn: '#confirm-save-btn',
       budgetNameInput: '#budget-name-input',
-      savedBudgetsList: '.sidebar-content ul',
+      savedBudgetsList: '#saved-budgets-list',
       newBudgetBtn: '#new-budget-btn',
       editItemModal: '#editItemModal',
       editItemName: '#edit-item-name',
       editItemPrice: '#edit-item-price',
       editItemQuantity: '#edit-item-quantity',
-      confirmEditItemBtn: '#confirm-edit-item'
+      confirmEditItemBtn: '#confirm-edit-item',
+      settingsBtn: '#settings-btn',
+      settingsPanel: '#settings-panel',
+      closeSettingsBtn: '#close-settings',
+      backToSidebarBtn: '#back-to-sidebar',
+      taxRateInput: '#tax-rate-input'
     };
 
     const elements = {};
     for (const [key, selector] of Object.entries(elementSelectors)) {
       elements[key] = document.querySelector(selector);
     }
-    elements.sidebarLinks = document.querySelectorAll('.sidebar .list-group-item a');
+    elements.sidebarLinks = document.querySelectorAll('#saved-budgets-list .budget-row a');
     return elements;
   }
 
@@ -124,8 +129,40 @@ document.addEventListener('DOMContentLoaded', () => {
   const confirmDeleteBudgetBtn = document.getElementById('confirm-delete-budget-btn'); if (confirmDeleteBudgetBtn) { confirmDeleteBudgetBtn.addEventListener('click', () => { const budgetId = confirmDeleteBudgetBtn.dataset.deleteBudgetId; if (budgetId) { savedBudgetsManager.deleteSavedBudget(budgetId); } hideModalAndRestoreFocus('confirmDeleteBudgetModal', '#menu-button'); delete confirmDeleteBudgetBtn.dataset.deleteBudgetId; }); }
   const confirmDeleteItemBtn = document.getElementById('confirm-delete-item-btn'); if (confirmDeleteItemBtn) { confirmDeleteItemBtn.addEventListener('click', () => { itemsManager.confirmDeleteItem(); hideModalAndRestoreFocus('confirmDeleteItemModal', '#budget-list button.delete-btn'); }); }
   const confirmClearBtn = document.getElementById('confirm-clear-btn'); if (confirmClearBtn) { confirmClearBtn.addEventListener('click', () => { itemsManager.handleClearAllItems(); hideModalAndRestoreFocus('confirmClearModal', '#clear-items'); }); }
-  if (elements.newBudgetBtn) { elements.newBudgetBtn.addEventListener('click', () => { elements.budgetList.innerHTML=''; elements.totalBudgetInput.value=''; budgetState.totalBudget=0; budgetState.currentSpending=0; savedBudgetsManager.createNewBudget(); uiManager.updateAll(); dataManager.saveToLocalStorage(); sidebarManager.toggle(); }); }
-  sidebarManager.setup();
+  if (elements.newBudgetBtn) { elements.newBudgetBtn.addEventListener('click', () => { elements.budgetList.innerHTML=''; elements.totalBudgetInput.value=''; budgetState.totalBudget=0; budgetState.currentSpending=0; savedBudgetsManager.createNewBudget(); uiManager.updateAll(); dataManager.saveToLocalStorage(); sidebarManager.close(); }); }
+    
+    // Settings Panel
+    if (elements.settingsBtn && elements.settingsPanel) {
+      elements.settingsBtn.addEventListener('click', () => {
+        elements.settingsPanel.classList.remove('hidden');
+        setTimeout(() => {
+          elements.settingsPanel.classList.remove('translate-x-full');
+        }, 10);
+      });
+    }
+    if (elements.closeSettingsBtn && elements.settingsPanel) {
+      elements.closeSettingsBtn.addEventListener('click', () => {
+        elements.settingsPanel.classList.add('translate-x-full');
+        setTimeout(() => elements.settingsPanel.classList.add('hidden'), 300);
+      });
+    }
+    if (elements.backToSidebarBtn && elements.settingsPanel) {
+      elements.backToSidebarBtn.addEventListener('click', () => {
+        elements.settingsPanel.classList.add('translate-x-full');
+        setTimeout(() => elements.settingsPanel.classList.add('hidden'), 300);
+      });
+    }
+    if (elements.taxRateInput) {
+      elements.taxRateInput.addEventListener('input', () => {
+        const val = parseFloat(elements.taxRateInput.value);
+        if (!isNaN(val) && val >= 0 && val <= 100) {
+          budgetState.taxRate = val / 100;
+          dataManager.saveToLocalStorage();
+        }
+      });
+    }
+    
+    sidebarManager.setup();
   
   // Re-request wake lock when visibility changes
   document.addEventListener('visibilitychange', async () => {
@@ -147,16 +184,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // ================ INITIALIZATION ================
+// ================ INITIALIZATION ================
   function initializeApp() {
     chartModule.initialize();
-  dataManager.loadFromLocalStorage();
-  // After loading saved budgets array, render them in the sidebar
-  savedBudgetsManager.updateSavedBudgetsList();
-  // Ensure active budget highlight reflects restored currentBudgetId
-  if (savedBudgetsManager && savedBudgetsManager.highlightActiveBudget) {
-    savedBudgetsManager.highlightActiveBudget();
-  }
+    dataManager.loadFromLocalStorage();
+    // After loading saved budgets array, render them in the sidebar
+    savedBudgetsManager.updateSavedBudgetsList();
+    // Ensure active budget highlight reflects restored currentBudgetId
+    if (savedBudgetsManager && savedBudgetsManager.highlightActiveBudget) {
+      savedBudgetsManager.highlightActiveBudget();
+    }
+    // Initialize tax rate input after data is loaded
+    if (elements.taxRateInput) {
+      elements.taxRateInput.value = (budgetState.taxRate * 100).toFixed(2);
+    }
     // Attach backup UI (after savedBudgetsManager so list can refresh after import)
     backupManager.attachUI('#export-backup', '#import-backup', '#import-backup-file', savedBudgetsManager);
     uiManager.updateEmptyListVisibility();
@@ -166,7 +207,6 @@ document.addEventListener('DOMContentLoaded', () => {
     themeManager.init();
     setupEventListeners();
     requestWakeLock();
-    document.querySelectorAll('.form-outline').forEach((formOutline) => { new mdb.Input(formOutline).init(); });
   }
 
   initializeApp();

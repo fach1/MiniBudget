@@ -19,13 +19,14 @@ export function createBudgetsModule({
       savedBudgets[index] = this.createBudgetObject(budgetState.currentBudgetId, budgetState.currentBudgetName);
     },
     updateSavedBudgetsList() {
+      if (!elements.savedBudgetsList) return;
       elements.savedBudgetsList.innerHTML = '';
       savedBudgets.forEach(budget => {
         const li = document.createElement('li');
-        li.className = 'list-group-item d-flex justify-content-between align-items-center';
+        li.className = 'budget-row flex items-center justify-between px-4 py-3 hover:bg-[var(--sidebar-control-bg)] transition-colors';
         li.innerHTML = `
-          <a href="#" class="budget-item" data-id="${budget.id}">${budget.name}</a>
-          <button class="btn btn-sm btn-outline-light delete-budget-btn" data-id="${budget.id}">
+          <a href="#" class="budget-item text-sm text-[color:var(--sidebar-text)] hover:opacity-80 transition-opacity" data-id="${budget.id}">${budget.name}</a>
+          <button class="delete-budget-btn p-1.5 rounded text-[color:var(--sidebar-text)] hover:text-red-300 hover:bg-[var(--sidebar-control-bg)] focus:outline-none focus:ring-2 focus:ring-white/25 transition-all duration-200" data-id="${budget.id}">
             <i class="fas fa-trash-alt"></i>
           </button>`;
         elements.savedBudgetsList.appendChild(li);
@@ -34,6 +35,7 @@ export function createBudgetsModule({
       this.highlightActiveBudget();
     },
     highlightActiveBudget() {
+      if (!elements.savedBudgetsList) return;
       const activeId = budgetState.currentBudgetId;
       elements.savedBudgetsList.querySelectorAll('.budget-item').forEach(a => {
         if (activeId && a.getAttribute('data-id') === activeId) {
@@ -44,12 +46,13 @@ export function createBudgetsModule({
       });
     },
     attachBudgetEventHandlers() {
+      if (!elements.savedBudgetsList) return;
       elements.savedBudgetsList.querySelectorAll('.budget-item').forEach(item => {
         item.addEventListener('click', (e) => {
           e.preventDefault();
           const budgetId = e.currentTarget.getAttribute('data-id');
             this.loadSavedBudget(budgetId);
-            sidebarManager.toggle();
+            sidebarManager.close();
         });
       });
       elements.savedBudgetsList.querySelectorAll('.delete-budget-btn').forEach(btn => {
@@ -60,7 +63,7 @@ export function createBudgetsModule({
           const budget = savedBudgets.find(b => b.id === budgetId); if (!budget) return;
           const confirmBtn = document.getElementById('confirm-delete-budget-btn'); if (confirmBtn) { confirmBtn.dataset.deleteBudgetId = budgetId; }
           const nameHolder = document.getElementById('delete-budget-name'); if (nameHolder) nameHolder.textContent = budget.name;
-          const modalEl = document.getElementById('confirmDeleteBudgetModal'); if (modalEl) { const instance = mdb.Modal.getInstance(modalEl) || new mdb.Modal(modalEl); instance.show(); }
+          if (window.openModal) window.openModal('confirmDeleteBudgetModal');
         });
       });
     },

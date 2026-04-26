@@ -17,25 +17,38 @@ export function createItemsManager({ budgetState, uiManager, elements, getDataMa
     findExistingItem(itemName) { const existingItems = Array.from(elements.budgetList.querySelectorAll('li')); return existingItems.find(item => { const itemNameElement = item.querySelector('strong'); return itemNameElement && itemNameElement.textContent === itemName; }); },
     incrementExistingItem(existingItem) {
   const quantityElement = existingItem.querySelector('.item-quantity'); const currentQuantity = parseInt(quantityElement.textContent, 10); quantityElement.textContent = currentQuantity + 1;
-  const badgeElement = existingItem.querySelector('.price-display'); const unitPrice = parseFloat(badgeElement.getAttribute('data-unit-price')); const newTotal = (unitPrice * (currentQuantity + 1)).toFixed(2); badgeElement.textContent = `$${newTotal}`; budgetState.currentSpending += unitPrice; if (savedBudgetsManager && savedBudgetsManager.syncActiveBudget) { savedBudgetsManager.syncActiveBudget(); }
+  const badgeElement = existingItem.querySelector('.price-display'); const unitPrice = parseFloat(badgeElement.getAttribute('data-unit-price')); 
+  const isTaxed = existingItem.querySelector('.tax-toggle')?.checked || false;
+  const effectivePrice = isTaxed ? unitPrice * (1 + (budgetState.taxRate || 0.08)) : unitPrice;
+  const newTotal = (effectivePrice * (currentQuantity + 1)).toFixed(2); badgeElement.textContent = `$${newTotal}`; budgetState.currentSpending += effectivePrice; if (savedBudgetsManager && savedBudgetsManager.syncActiveBudget) { savedBudgetsManager.syncActiveBudget(); }
     },
     addNewItem(itemName, amount, formattedAmount) {
   budgetState.currentSpending += amount;
-      const listItem = document.createElement('li'); listItem.className = 'list-group-item';
+      const listItem = document.createElement('li'); listItem.className = 'p-4 hover:bg-gray-50 transition-colors';
+      const uniqueId = `tax-${Date.now()}-${Math.random().toString(16).slice(2)}`;
       listItem.innerHTML = `
-        <div class="d-flex justify-content-between align-items-center w-100 mb-2">
-          <strong class="fs-6">${itemName}</strong>
-          <span class="text-success fw-bold fs-5 price-display" data-unit-price="${formattedAmount}">$${formattedAmount}</span>
+        <div class="flex justify-between items-center mb-3">
+          <strong class="text-base font-semibold text-gray-800">${itemName}</strong>
+          <span class="text-lg font-bold text-theme price-display" data-unit-price="${formattedAmount}">$${formattedAmount}</span>
         </div>
-        <div class="d-flex justify-content-between align-items-center w-100">
-          <div class="d-flex align-items-center">
-            <button class="btn btn-outline-secondary btn-sm decrement-btn px-3" aria-label="Decrease quantity">-</button>
-            <span class="mx-3 item-quantity fw-bold">1</span>
-            <button class="btn btn-outline-secondary btn-sm increment-btn px-3" aria-label="Increase quantity">+</button>
+        <div class="flex justify-between items-center">
+          <div class="inline-flex items-center border border-gray-200 rounded-md bg-white">
+            <button class="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded-l-md transition-colors decrement-btn"><i class="fas fa-minus text-xs pointer-events-none"></i></button>
+            <span class="px-3 font-semibold text-gray-800 border-x border-gray-200 min-w-[2.5rem] text-center item-quantity">1</span>
+            <button class="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded-r-md transition-colors increment-btn"><i class="fas fa-plus text-xs pointer-events-none"></i></button>
           </div>
-          <div>
-            <button class="btn btn-outline-primary btn-sm edit-btn me-2" aria-label="Edit item" title="Edit"><i class="fas fa-edit"></i></button>
-            <button class="btn btn-danger btn-sm delete-btn" aria-label="Delete item" title="Delete"><i class="fas fa-trash"></i></button>
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2">
+              <label class="text-xs font-semibold text-gray-500" for="${uniqueId}">TAX</label>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" class="sr-only peer tax-toggle" id="${uniqueId}">
+                <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-theme pointer-events-none"></div>
+              </label>
+            </div>
+            <div class="flex gap-1">
+              <button class="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded transition-colors edit-btn" title="Edit"><i class="fas fa-pen text-sm pointer-events-none"></i></button>
+              <button class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors delete-btn" title="Delete"><i class="fas fa-trash-alt text-sm pointer-events-none"></i></button>
+            </div>
           </div>
         </div>`;
   this.attachItemEventHandlers(listItem); elements.budgetList.appendChild(listItem); if (savedBudgetsManager && savedBudgetsManager.syncActiveBudget) { savedBudgetsManager.syncActiveBudget(); }
@@ -44,14 +57,16 @@ export function createItemsManager({ budgetState, uiManager, elements, getDataMa
       const listItem = event.target.closest('li'); if (!listItem) return;
       try {
         const quantityElement = listItem.querySelector('.item-quantity'); const badgeElement = listItem.querySelector('.price-display'); const unitPriceAttr = badgeElement.getAttribute('data-unit-price');
-  if (quantityElement && badgeElement && unitPriceAttr) { const unitPrice = parseFloat(unitPriceAttr); const currentQuantity = parseInt(quantityElement.textContent, 10); const newQuantity = currentQuantity + 1; quantityElement.textContent = newQuantity; const newTotal = (unitPrice * newQuantity).toFixed(2); badgeElement.textContent = `$${newTotal}`; budgetState.currentSpending += unitPrice; uiManager.updateAll(); if (savedBudgetsManager && savedBudgetsManager.syncActiveBudget) { savedBudgetsManager.syncActiveBudget(); } getDataManager().saveToLocalStorage(); if (navigator.vibrate) navigator.vibrate(50); }
+        const isTaxed = listItem.querySelector('.tax-toggle')?.checked || false;
+  if (quantityElement && badgeElement && unitPriceAttr) { const unitPrice = parseFloat(unitPriceAttr); const effectivePrice = isTaxed ? unitPrice * (1 + (budgetState.taxRate || 0.08)) : unitPrice; const currentQuantity = parseInt(quantityElement.textContent, 10); const newQuantity = currentQuantity + 1; quantityElement.textContent = newQuantity; const newTotal = (effectivePrice * newQuantity).toFixed(2); badgeElement.textContent = `$${newTotal}`; budgetState.currentSpending += effectivePrice; uiManager.updateAll(); if (savedBudgetsManager && savedBudgetsManager.syncActiveBudget) { savedBudgetsManager.syncActiveBudget(); } getDataManager().saveToLocalStorage(); if (navigator.vibrate) navigator.vibrate(50); }
       } catch (error) { console.error('Error incrementing item:', error); }
     },
     handleDecrementItem(event) {
       const listItem = event.target.closest('li'); if (!listItem) return;
       try {
         const quantityElement = listItem.querySelector('.item-quantity'); const badgeElement = listItem.querySelector('.price-display'); const unitPriceAttr = badgeElement.getAttribute('data-unit-price');
-  if (quantityElement && badgeElement && unitPriceAttr) { const unitPrice = parseFloat(unitPriceAttr); const currentQuantity = parseInt(quantityElement.textContent, 10); if (currentQuantity <= 1) { this.handleDeleteItem({ target: listItem.querySelector('.delete-btn') }); return; } const newQuantity = currentQuantity - 1; quantityElement.textContent = newQuantity; const newTotal = (unitPrice * newQuantity).toFixed(2); badgeElement.textContent = `$${newTotal}`; budgetState.currentSpending -= unitPrice; uiManager.updateAll(); if (savedBudgetsManager && savedBudgetsManager.syncActiveBudget) { savedBudgetsManager.syncActiveBudget(); } getDataManager().saveToLocalStorage(); if (navigator.vibrate) navigator.vibrate(50); }
+        const isTaxed = listItem.querySelector('.tax-toggle')?.checked || false;
+  if (quantityElement && badgeElement && unitPriceAttr) { const unitPrice = parseFloat(unitPriceAttr); const effectivePrice = isTaxed ? unitPrice * (1 + (budgetState.taxRate || 0.08)) : unitPrice; const currentQuantity = parseInt(quantityElement.textContent, 10); if (currentQuantity <= 1) { this.handleDeleteItem({ target: listItem.querySelector('.delete-btn') }); return; } const newQuantity = currentQuantity - 1; quantityElement.textContent = newQuantity; const newTotal = (effectivePrice * newQuantity).toFixed(2); badgeElement.textContent = `$${newTotal}`; budgetState.currentSpending -= effectivePrice; uiManager.updateAll(); if (savedBudgetsManager && savedBudgetsManager.syncActiveBudget) { savedBudgetsManager.syncActiveBudget(); } getDataManager().saveToLocalStorage(); if (navigator.vibrate) navigator.vibrate(50); }
       } catch (error) { console.error('Error decrementing item:', error); }
     },
     handleDeleteItem(event) {
@@ -67,26 +82,28 @@ export function createItemsManager({ budgetState, uiManager, elements, getDataMa
       const nameElement = listItem.querySelector('strong'); const badgeElement = listItem.querySelector('.price-display'); const quantityElement = listItem.querySelector('.item-quantity'); if (!nameElement || !badgeElement || !quantityElement) return;
       const unitPrice = parseFloat(badgeElement.getAttribute('data-unit-price'));
       elements.editItemName.value = nameElement.textContent.trim(); elements.editItemPrice.value = unitPrice.toFixed(2); elements.editItemQuantity.value = quantityElement.textContent.trim();
-      document.querySelectorAll('#editItemModal .form-outline').forEach((f) => { new mdb.Input(f).init(); });
-      const modalEl = document.getElementById('editItemModal'); itemsManager.editModalInstance = mdb.Modal.getInstance(modalEl) || new mdb.Modal(modalEl); itemsManager.editModalInstance.show();
+      if (window.openModal) window.openModal('editItemModal');
     },
     confirmEditChanges() {
       const listItem = itemsManager.itemBeingEdited; if (!listItem) return;
       const nameElement = listItem.querySelector('strong'); const badgeElement = listItem.querySelector('.price-display'); const quantityElement = listItem.querySelector('.item-quantity'); if (!nameElement || !badgeElement || !quantityElement) return;
       const prevUnitPrice = parseFloat(badgeElement.getAttribute('data-unit-price')); const prevQuantity = parseInt(quantityElement.textContent, 10);
       const newName = elements.editItemName.value.trim(); const newUnitPrice = parseFloat(elements.editItemPrice.value); const newQuantity = parseInt(elements.editItemQuantity.value, 10);
+      const isTaxed = listItem.querySelector('.tax-toggle')?.checked || false;
       if (!newName || isNaN(newUnitPrice) || newUnitPrice <= 0 || isNaN(newQuantity) || newQuantity <= 0) { alert('Datos inválidos.'); return; }
-      const oldTotal = prevUnitPrice * prevQuantity; const newTotal = newUnitPrice * newQuantity; budgetState.currentSpending += (newTotal - oldTotal);
+      
+      const oldTotalText = badgeElement.textContent.replace('$', ''); const oldTotal = parseFloat(oldTotalText);
+      const effectivePrice = isTaxed ? newUnitPrice * (1 + (budgetState.taxRate || 0.08)) : newUnitPrice;
+      const newTotal = effectivePrice * newQuantity; budgetState.currentSpending += (newTotal - oldTotal);
       nameElement.textContent = newName; quantityElement.textContent = newQuantity; badgeElement.setAttribute('data-unit-price', newUnitPrice.toFixed(2)); badgeElement.textContent = `$${newTotal.toFixed(2)}`;
-  uiManager.updateAll(); if (savedBudgetsManager && savedBudgetsManager.syncActiveBudget) { savedBudgetsManager.syncActiveBudget(); } getDataManager().saveToLocalStorage(); if (itemsManager.editModalInstance) { itemsManager.editModalInstance.hide(); } itemsManager.itemBeingEdited = null;
+  uiManager.updateAll(); if (savedBudgetsManager && savedBudgetsManager.syncActiveBudget) { savedBudgetsManager.syncActiveBudget(); } getDataManager().saveToLocalStorage(); if (window.closeModal) window.closeModal(); itemsManager.itemBeingEdited = null;
     },
     confirmDeleteItem() {
-      if (!itemsManager.itemPendingDeletion) return; itemsManager.handleDeleteItem({ target: itemsManager.itemPendingDeletion.querySelector('.delete-btn') }); itemsManager.itemPendingDeletion = null; const modalEl = document.getElementById('confirmDeleteItemModal'); if (modalEl) { const instance = mdb.Modal.getInstance(modalEl); if (instance) instance.hide(); }
+      if (!itemsManager.itemPendingDeletion) return; itemsManager.handleDeleteItem({ target: itemsManager.itemPendingDeletion.querySelector('.delete-btn') }); itemsManager.itemPendingDeletion = null; if (window.closeModal) window.closeModal();
     },
     handleClearAllItems() {
-      const clearModalEl = document.getElementById('confirmClearModal'); const clearModalInstance = clearModalEl ? mdb.Modal.getInstance(clearModalEl) : null;
-      if (elements.budgetList.children.length === 0) { if (clearModalInstance) clearModalInstance.hide(); return; }
-      elements.budgetList.innerHTML = ''; budgetState.currentSpending = 0; uiManager.updateAll(); getDataManager().saveToLocalStorage(); if (budgetState.isEditMode && budgetState.currentBudgetId) { savedBudgetsManager.createNewBudget(); } if (clearModalInstance) clearModalInstance.hide();
+      if (elements.budgetList.children.length === 0) { if (window.closeModal) window.closeModal(); return; }
+      elements.budgetList.innerHTML = ''; budgetState.currentSpending = 0; uiManager.updateAll(); getDataManager().saveToLocalStorage(); if (budgetState.isEditMode && budgetState.currentBudgetId) { savedBudgetsManager.createNewBudget(); } if (window.closeModal) window.closeModal();
     },
     attachItemEventHandlers(listItem) {
       const deleteBtn = listItem.querySelector('.delete-btn');
@@ -95,21 +112,43 @@ export function createItemsManager({ budgetState, uiManager, elements, getDataMa
           e.preventDefault();
           const li = e.target.closest('li'); if (!li) return; itemsManager.itemPendingDeletion = li;
           const nameEl = li.querySelector('strong'); const nameHolder = document.getElementById('delete-item-name'); if (nameEl && nameHolder) nameHolder.textContent = nameEl.textContent.trim();
-          const modalEl = document.getElementById('confirmDeleteItemModal'); if (modalEl) { const instance = mdb.Modal.getInstance(modalEl) || new mdb.Modal(modalEl); instance.show(); }
+          if (window.openModal) window.openModal('confirmDeleteItemModal');
         });
       }
       const incrementBtn = listItem.querySelector('.increment-btn'); if (incrementBtn) incrementBtn.addEventListener('click', this.handleIncrementItem.bind(this));
       const decrementBtn = listItem.querySelector('.decrement-btn'); if (decrementBtn) decrementBtn.addEventListener('click', this.handleDecrementItem.bind(this));
-      let editBtn = listItem.querySelector('.edit-btn'); const controlsContainer = listItem.querySelector('.d-flex.align-items-center'); const deleteBtnCurrent = listItem.querySelector('.delete-btn');
+      const taxToggle = listItem.querySelector('.tax-toggle'); if (taxToggle) taxToggle.addEventListener('change', this.handleTaxToggle.bind(this));
+      let editBtn = listItem.querySelector('.edit-btn'); const controlsContainer = listItem.querySelector('.flex.items-center.gap-3'); const deleteBtnCurrent = listItem.querySelector('.delete-btn');
       if (!editBtn && controlsContainer) {
         editBtn = document.createElement('button');
-        editBtn.className = 'btn btn-outline-primary btn-sm edit-btn ms-2';
-        editBtn.innerHTML = '<i class="fas fa-edit"></i>';
-        editBtn.setAttribute('aria-label', 'Edit item');
+        editBtn.className = 'p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded transition-colors edit-btn';
+        editBtn.innerHTML = '<i class="fas fa-pen text-sm pointer-events-none"></i>';
         editBtn.setAttribute('title', 'Edit');
         if (deleteBtnCurrent) { controlsContainer.insertBefore(editBtn, deleteBtnCurrent); } else { controlsContainer.appendChild(editBtn); }
       }
       if (editBtn) { editBtn.addEventListener('click', this.openEditModal.bind(this)); }
+    },
+    handleTaxToggle(event) {
+      const listItem = event.target.closest('li'); if (!listItem) return;
+      const badgeElement = listItem.querySelector('.price-display');
+      const quantityElement = listItem.querySelector('.item-quantity');
+      const unitPriceAttr = badgeElement.getAttribute('data-unit-price');
+      if (!badgeElement || !quantityElement || !unitPriceAttr) return;
+
+      const basePrice = parseFloat(unitPriceAttr);
+      const quantity = parseInt(quantityElement.textContent, 10);
+      const isTaxed = event.target.checked;
+      
+      const oldTotalText = badgeElement.textContent.replace('$', ''); const oldTotal = parseFloat(oldTotalText);
+      const effectivePrice = isTaxed ? basePrice * (1 + (budgetState.taxRate || 0.08)) : basePrice;
+      const newTotal = effectivePrice * quantity;
+      
+      budgetState.currentSpending += (newTotal - oldTotal);
+      badgeElement.textContent = `$${newTotal.toFixed(2)}`;
+      
+      uiManager.updateAll();
+      if (savedBudgetsManager && savedBudgetsManager.syncActiveBudget) { savedBudgetsManager.syncActiveBudget(); }
+      getDataManager().saveToLocalStorage();
     }
   };
 

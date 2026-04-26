@@ -1,7 +1,7 @@
 // Utility helpers (modal focus management, formatting, etc.)
 
 /**
- * Hide an MDB modal by id and restore focus to a selector afterwards.
+ * Hide an app modal by id and restore focus to a selector afterwards.
  * Prevents focus remaining inside an aria-hidden container (accessibility fix).
  * @param {string} modalId - ID del elemento modal (sin #)
  * @param {string} [focusSelector] - Selector CSS del elemento que recibirá el foco tras cerrar
@@ -9,8 +9,7 @@
 export function hideModalAndRestoreFocus(modalId, focusSelector) {
   const modalEl = document.getElementById(modalId);
   if (!modalEl) return;
-  const instance = mdb.Modal.getInstance(modalEl);
-  if (!instance) return;
+  if (window.closeModal) window.closeModal();
 
   let focusEl = focusSelector ? document.querySelector(focusSelector) : null;
   if (!focusEl || !document.contains(focusEl)) {
@@ -32,18 +31,8 @@ export function hideModalAndRestoreFocus(modalId, focusSelector) {
     focusEl = sentinel;
   }
 
-  // Move focus BEFORE hiding to avoid aria-hidden focus warning
+  // Move focus
   try { focusEl.focus({ preventScroll: true }); } catch (_) {}
-
-  const handler = () => {
-    modalEl.removeEventListener('hidden.mdb.modal', handler);
-    // If somehow focus returned inside the (now hidden) modal, re-focus target
-    if (modalEl.contains(document.activeElement)) {
-      try { focusEl.focus({ preventScroll: true }); } catch (_) {}
-    }
-  };
-  modalEl.addEventListener('hidden.mdb.modal', handler);
-  instance.hide();
 }
 
 /**
