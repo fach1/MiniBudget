@@ -47,12 +47,14 @@ export function createBudgetsModule({
     },
     attachBudgetEventHandlers() {
       if (!elements.savedBudgetsList) return;
-      elements.savedBudgetsList.querySelectorAll('.budget-item').forEach(item => {
-        item.addEventListener('click', (e) => {
-          e.preventDefault();
-          const budgetId = e.currentTarget.getAttribute('data-id');
+      elements.savedBudgetsList.querySelectorAll('.budget-row').forEach(row => {
+        row.addEventListener('click', (e) => {
+          if (e.target.closest('.delete-budget-btn')) return;
+          const budgetId = row.querySelector('.budget-item')?.getAttribute('data-id');
+          if (budgetId) {
             this.loadSavedBudget(budgetId);
             sidebarManager.close();
+          }
         });
       });
       elements.savedBudgetsList.querySelectorAll('.delete-budget-btn').forEach(btn => {
