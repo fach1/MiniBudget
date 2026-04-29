@@ -26,11 +26,6 @@ export function createSidebarManager(elements) {
       if (elements.menuButton) elements.menuButton.addEventListener('click', () => this.toggle());
       if (elements.closeSidebarBtn) elements.closeSidebarBtn.addEventListener('click', () => this.close());
       if (elements.sidebarOverlay) elements.sidebarOverlay.addEventListener('click', () => this.close());
-      if (elements.sidebarLinks) {
-        elements.sidebarLinks.forEach(link => {
-          link.addEventListener('click', () => this.close());
-        });
-      }
     }
   };
 }

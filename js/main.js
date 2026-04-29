@@ -44,7 +44,6 @@ document.addEventListener('DOMContentLoaded', () => {
       confirmEditItemBtn: '#confirm-edit-item',
       settingsBtn: '#settings-btn',
       settingsPanel: '#settings-panel',
-      closeSettingsBtn: '#close-settings',
       backToSidebarBtn: '#back-to-sidebar',
       taxRateInput: '#tax-rate-input'
     };
@@ -53,7 +52,6 @@ document.addEventListener('DOMContentLoaded', () => {
     for (const [key, selector] of Object.entries(elementSelectors)) {
       elements[key] = document.querySelector(selector);
     }
-    elements.sidebarLinks = document.querySelectorAll('#saved-budgets-list .budget-row a');
     return elements;
   }
 
@@ -138,12 +136,6 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
           elements.settingsPanel.classList.remove('translate-x-full');
         }, 10);
-      });
-    }
-    if (elements.closeSettingsBtn && elements.settingsPanel) {
-      elements.closeSettingsBtn.addEventListener('click', () => {
-        elements.settingsPanel.classList.add('translate-x-full');
-        setTimeout(() => elements.settingsPanel.classList.add('hidden'), 300);
       });
     }
     if (elements.backToSidebarBtn && elements.settingsPanel) {
